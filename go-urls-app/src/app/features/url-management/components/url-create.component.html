@@ -1,0 +1,35 @@
+<div>
+  <div *ngIf="bannerMessage" role="alert" [ngClass]="['alert', 'alert-' + bannerType]">{{ bannerMessage }}</div>
+  <h2 class="mb-4">Create New URL</h2>
+  <form (ngSubmit)="addUrl()" class="mb-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-3">
+        <label for="shortName">Short Name</label>
+        <input id="shortName" type="text" class="form-control" [(ngModel)]="shortName" name="shortName" required />
+      </div>
+      <div class="col-md-6">
+        <label for="longUrl">Long URL</label>
+        <input id="longUrl" type="text" class="form-control" [(ngModel)]="longUrl" name="longUrl" required />
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button class="btn btn-info w-100 align-self-end" type="submit">Add URL</button>
+      </div>
+    </div>
+  </form>
+  <h3 class="mb-3">All URLs</h3>
+  <table class="table table-striped table-bordered w-100">
+    <thead>
+      <tr>
+        <th>Short Name</th>
+        <th>Long URL</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let entry of allEntries">
+        <td>{{ entry.shortName }}</td>
+        <td>{{ entry.longUrl }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div *ngIf="allEntries.length === 0" class="mt-4 text-muted">No records found.</div>
+</div>

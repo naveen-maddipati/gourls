@@ -1,0 +1,86 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+}
+
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+}
+
+.home-content {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(60, 80, 120, 0.18);
+  padding: 48px 40px;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #2a4d7c;
+  margin-bottom: 24px;
+}
+
+.objective {
+  font-size: 1.2rem;
+  color: #3a3a3a;
+  margin-bottom: 32px;
+}
+
+.advantages h2 {
+  color: #2a4d7c;
+  margin-bottom: 12px;
+}
+
+.advantages ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px 0;
+}
+
+.advantages li {
+  background: #eaf6ff;
+  margin: 8px 0;
+  padding: 10px 18px;
+  border-radius: 8px;
+  color: #2a4d7c;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(60, 80, 120, 0.06);
+}
+
+.links-section {
+  margin-top: 24px;
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.home-link {
+  display: inline-block;
+  padding: 14px 32px;
+  background: linear-gradient(90deg, #4f8cff 0%, #38c6ff 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(60, 80, 120, 0.12);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.home-link:hover {
+  background: linear-gradient(90deg, #38c6ff 0%, #4f8cff 100%);
+  transform: translateY(-2px) scale(1.04);
+}

@@ -1,0 +1,81 @@
+/* Ensure modal appears above backdrop */
+.modal {
+  z-index: 1055 !important;
+}
+.modal-backdrop {
+  z-index: 1050 !important;
+}
+
+body, .app-full-page {
+  background: #f8fafc !important;
+  color: #222 !important;
+}
+.app-container, .card, .bg-white, .home-container, .home-content {
+  background: #fff !important;
+  color: #222 !important;
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(14,134,212,0.10);
+  border: 1px solid #b6e6fb;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #0e86d4 !important;
+}
+.table {
+  background: #fff !important;
+  color: #222 !important;
+}
+.table th {
+  background: #b6e6fb !important;
+  color: #0e86d4 !important;
+}
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #e6f7fd !important;
+}
+.form-control, .form-label {
+  background: #f8fafc !important;
+  color: #222 !important;
+  border: 1px solid #0e86d4;
+}
+.form-control:focus {
+  border-color: #0e86d4;
+  box-shadow: 0 0 0 0.2rem #0e86d440;
+}
+.btn-primary, .btn-info, .btn-success {
+  background: linear-gradient(90deg, #0e86d4 0%, #b6e6fb 100%);
+  border: none;
+  color: #fff !important;
+}
+.btn-danger {
+  background: linear-gradient(90deg, #ef4444 0%, #facc15 100%);
+  border: none;
+  color: #fff !important;
+}
+.btn:hover, .btn:focus {
+  opacity: 0.85;
+}
+.list-group-item {
+  background: #fff !important;
+  color: #222 !important;
+  border: none;
+}
+.card {
+  background: linear-gradient(135deg, #0e86d4 0%, #b6e6fb 100%) !important;
+  color: #222 !important;
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(14,134,212,0.18);
+  border: none;
+}
+.card-title, .card-header {
+  color: #0e86d4 !important;
+}
+.card-body {
+  color: #222 !important;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  background: #fff;
+}
+::-webkit-scrollbar-thumb {
+  background: #b6e6fb;
+  border-radius: 4px;
+}

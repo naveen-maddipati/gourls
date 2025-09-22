@@ -1,0 +1,75 @@
+<nav class="navbar navbar-expand-lg mb-4 shadow-lg rounded-bottom" style="background: #055c9d;">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold fs-3 text-white d-flex align-items-center" routerLink="/" style="cursor:pointer;">
+      <i class="bi bi-link-45deg me-2 fs-2"></i>GoUrls
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+       <a class="nav-link px-4 py-2 text-white position-relative rounded-pill mx-1 d-flex align-items-center"
+         routerLink="/search" routerLinkActive="active-nav-link" [routerLinkActiveOptions]="{ exact: true }" style="font-size: 1.1rem;">
+            <i class="bi bi-search me-1"></i>Search
+            <span class="nav-underline"></span>
+          </a>
+        </li>
+        <li class="nav-item">
+       <a class="nav-link px-4 py-2 text-white position-relative rounded-pill mx-1 d-flex align-items-center"
+         routerLink="/create" routerLinkActive="active-nav-link" [routerLinkActiveOptions]="{ exact: true }" style="font-size: 1.1rem;">
+            <i class="bi bi-plus-circle me-1"></i>Create
+            <span class="nav-underline"></span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<!-- Notification area below navbar -->
+<div *ngIf="bannerMessage" class="container mt-2">
+  <div class="alert shadow-sm text-center mb-0" [ngClass]="'alert-' + bannerType">
+    {{ bannerMessage }}
+  </div>
+</div>
+<div class="app-full-page">
+  <div class="app-container">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+<style>
+  .navbar {
+    border-bottom: 2px solid #0e86d4;
+  }
+  .navbar-brand {
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px #0e86d499;
+  }
+  .navbar-nav .nav-link {
+    transition: background 0.2s, color 0.2s;
+    overflow: hidden;
+  }
+  .navbar-nav .nav-link:hover {
+    background: #0e86d4;
+    color: #fff !important;
+  }
+  .active-nav-link {
+    background: #0e86d4 !important;
+    color: #fff !important;
+    box-shadow: 0 2px 12px #0e86d455;
+  }
+  .nav-underline {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0e86d4 0%, #b6e6fb 100%);
+    border-radius: 2px;
+    transition: width 0.3s cubic-bezier(.4,0,.2,1), left 0.3s cubic-bezier(.4,0,.2,1);
+  }
+  .navbar-nav .nav-link:hover .nav-underline {
+    width: 80%;
+    left: 10%;
+  }
+</style>

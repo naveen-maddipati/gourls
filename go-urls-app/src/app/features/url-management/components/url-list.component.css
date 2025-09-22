@@ -1,0 +1,19 @@
+/* Home link styling */
+.home-link {
+	display: inline-block;
+	padding: 10px 24px;
+	background: linear-gradient(90deg, #4f8cff 0%, #38c6ff 100%);
+	color: #fff;
+	font-size: 1.1rem;
+	font-weight: 600;
+	border-radius: 8px;
+	text-decoration: none;
+	box-shadow: 0 2px 8px rgba(60, 80, 120, 0.12);
+	margin-bottom: 8px;
+	transition: background 0.2s, transform 0.2s;
+}
+.home-link:hover {
+	background: linear-gradient(90deg, #38c6ff 0%, #4f8cff 100%);
+	transform: translateY(-2px) scale(1.04);
+}
+/* Styles for URL List Component */
