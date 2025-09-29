@@ -45,6 +45,17 @@ namespace GoUrlsApi.Controllers
             return Ok(filtered);
         }
 
+        [HttpGet("redirect/{shortName}")]
+        public async Task<ActionResult<UrlEntry>> GetByShortName(string shortName)
+        {
+            var entry = await _context.Urls.FirstOrDefaultAsync(u => u.ShortName == shortName);
+            if (entry == null)
+            {
+                return NotFound();
+            }
+            return Ok(entry);
+        }
+
         [HttpPost]
         public async Task<ActionResult<UrlEntry>> Add([FromBody] UrlEntry entry)
         {

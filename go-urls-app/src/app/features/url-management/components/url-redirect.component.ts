@@ -24,11 +24,13 @@ export class UrlRedirectComponent {
   }
 
   redirect(shortName: string) {
-    this.urlService.getUrls().subscribe(entries => {
-      const found = entries.find(e => e.shortName === shortName);
-      if (found) {
-        window.location.href = found.longUrl;
-      } else {
+    this.urlService.getByShortName(shortName).subscribe({
+      next: (entry) => {
+        console.log('Found URL entry:', entry);
+        window.location.href = entry.longUrl;
+      },
+      error: (error) => {
+        console.log('URL not found:', shortName, error);
         // Show home page and message
         this.redirectUrl = null;
         // Use Angular router to navigate to home and pass message

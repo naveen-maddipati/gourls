@@ -13,13 +13,25 @@
 
 # Copilot Instructions & Coding Standards
 
+
 This project uses the following tech stack:
 - **Backend:** .NET Core (C#)
 - **Database:** PostgreSQL
-- **Frontend:** Angular
+- **Frontend:** Angular (Standalone Components, Angular 20+)
+- **UI Framework:** Bootstrap 5 (global styles), Bootstrap Icons
+- **Routing:** Go Links (dynamic route matching for short URLs)
+- **State Management:** Angular Signals (where applicable)
 - **Authentication:** Windows Authentication (Active Directory)
 - **Unit Testing:** Jasmine/Karma (Angular)
 - **E2E Testing:** Playwright
+
+## Additional Technologies & Patterns
+- **Bootstrap 5** for responsive UI and modals/alerts
+- **Bootstrap Icons** for consistent iconography
+- **Angular Standalone Components** for modular architecture
+- **Go Links Routing** for short URL redirection
+- **Signal API** for reactive state (where used)
+- **Custom Notification & Modal Patterns** for consistent UX
 
 ## Folder Structure
 my-angular-project/
@@ -61,16 +73,24 @@ file
 - Normalize database schema and use appropriate indexing.
 - Store connection strings securely (environment variables or secrets manager).
 
-### Angular
+
+### Angular & UI
 - Use Angular CLI for project scaffolding and code generation.
+- Prefer Standalone Components for new features.
+- Use Angular Signals for reactive state where appropriate.
 - Follow Angular style guide (file naming, folder structure, component organization).
 - Use TypeScript strict mode and interfaces for type safety.
 - Prefer reactive forms and observables for data handling.
+- Use Bootstrap 5 for layout, modals, alerts, and forms.
+- Use Bootstrap Icons for all icon needs.
+- Implement notification and modal patterns globally for consistent UX.
+
 
 ### Testing
 - Write unit tests for all components/services using Jasmine/Karma.
 - Use Playwright for end-to-end testing of user flows and authentication.
 - Maintain high test coverage and run tests on every commit.
+- Test Go Links routing and notification/modal flows.
 
 ## How to Use Copilot
 1. Start typing code or comments to trigger Copilot suggestions.

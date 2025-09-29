@@ -57,4 +57,13 @@ export class UrlManagementService {
       })
     );
   }
+
+  getByShortName(shortName: string): Observable<UrlEntry> {
+    return this.http.get<UrlEntry>(`${this.apiUrl}/redirect/${encodeURIComponent(shortName)}`).pipe(
+      catchError((error: any) => {
+        console.error('Error getting URL by short name:', error);
+        throw error;
+      })
+    );
+  }
 }

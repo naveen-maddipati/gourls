@@ -1,14 +1,11 @@
 import { Component, signal } from '@angular/core';
-import { NgClass } from '@angular/common';
+import { NgClass, CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
-import { UserAvatarComponent } from './layout/user-avatar.component';
-import { UrlCreateComponent } from './features/url-management/components/url-create.component';
-import { UrlListComponent } from './features/url-management/components/url-list.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgClass, HttpClientModule, UserAvatarComponent, UrlCreateComponent, UrlListComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgClass, CommonModule, HttpClientModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
