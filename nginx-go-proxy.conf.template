@@ -1,42 +1,113 @@
-# nginx Configuration Template for GoUrls
-# This file will be used to generate the actual nginx config from environment variables
+worker_processes auto;
+error_log /tmp/nginx-dev-error.log warn;
+pid /tmp/nginx-dev.pid;
 
-worker_processes 1;
 events {
     worker_connections 1024;
 }
 
 http {
-    # Main Go domain server
-    server {
-        listen {{NGINX_PORT}};
-        server_name {{GO_DOMAIN}};
-        
-        # Main proxy to Angular app
-        location / {
-            proxy_pass {{ANGULAR_URL}};
-            proxy_set_header Host localhost:{{ANGULAR_PORT}};
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            
-            # WebSocket support for Angular dev server
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-        }
-        
-        # Static assets proxy
-        location /assets/ {
-            proxy_pass {{ANGULAR_URL}}/assets/;
-        }
-        
-        # API proxy (if needed for direct API access via go domain)
-        location /api/ {
-            proxy_pass {{API_URL}}/api/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
+    # Basic MIME types
+    types {
+        text/html                             html htm shtml;
+        text/css                              css;
+        application/javascript                js;
+        application/json                      json;
+        text/plain                            txt;
+        image/png                             png;
+        image/jpeg                            jpg jpeg;
+        image/gif                             gif;
+        image/svg+xml                         svg;
+        image/x-icon                          ico;
+        application/octet-stream              bin exe dll;
     }
+    default_type  application/octet-stream;
+    
+    sendfile        on;
+    keepalive_timeout  65;
+    
+    # Access log
+    access_log /tmp/nginx-dev-access.log;
+
+server {
+    listen {{NGINX_PORT}};
+    listen 80;
+    server_name {{GO_DOMAIN}} localhost;
+
+    # API routing (highest priority - specific paths)
+    location /api/ {
+        proxy_pass {{API_URL}}/api/;
+        proxy_set_header Host $host:$server_port;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # CORS headers for development
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS";
+        add_header Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization";
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "Development Environment OK\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Development info endpoint
+    location /dev-info {
+        access_log off;
+        return 200 "GoUrls Development Environment\nDomain: {{GO_DOMAIN}}\nPorts: nginx({{NGINX_PORT}},80), angular({{ANGULAR_PORT}}), api(5165), db(5431)\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Reserved words - handle with Angular routing (regex locations)
+    location ~ ^/({{RESERVED_PATTERN}})$ {
+        proxy_pass http://127.0.0.1:{{ANGULAR_PORT}};
+        proxy_set_header Host $host:$server_port;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket support for Angular hot reload
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # Go link redirects (for short URLs) - MUST be after reserved word routes
+    location ~ ^/([a-zA-Z0-9_-]+)$ {
+        proxy_pass {{API_URL}}/api/urls/redirect/$1;
+        proxy_set_header Host $host:$server_port;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Main application routing (catch-all - MUST be last)
+    location / {
+        proxy_pass http://127.0.0.1:{{ANGULAR_PORT}};
+        proxy_set_header Host $host:$server_port;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket support for Angular hot reload
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Timeout settings for development
+        proxy_connect_timeout 600;
+        proxy_send_timeout 600;
+        proxy_read_timeout 600;
+        send_timeout 600;
+    }
+
+    # Error pages
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+}
+
 }

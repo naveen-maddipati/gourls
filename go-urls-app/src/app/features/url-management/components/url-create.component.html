@@ -26,8 +26,16 @@
     </thead>
     <tbody>
       <tr *ngFor="let entry of allEntries">
-        <td>{{ entry.shortName }}</td>
-        <td>{{ entry.longUrl }}</td>
+        <td>
+          <a [href]="goDomain + '/' + entry.shortName" target="_blank" class="text-decoration-none">
+            {{ entry.shortName }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+        </td>
+        <td>
+          <a [href]="entry.longUrl" target="_blank" class="text-decoration-none text-truncate d-inline-block" style="max-width: 300px;" [title]="entry.longUrl">
+            {{ entry.longUrl }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+        </td>
       </tr>
     </tbody>
   </table>

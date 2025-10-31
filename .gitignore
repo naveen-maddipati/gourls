@@ -1,6 +1,12 @@
 # Environment configuration (contains sensitive data)
 .env
 .env.local
+.env.docker
+
+# Docker-specific files
+docker-compose.override.yml
+*.sql
+backups/
 
 # Development logs
 logs/

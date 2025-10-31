@@ -253,6 +253,54 @@ POSTGRES_PORT=5432
 ### **System Requirements**
 - `NODE_VERSION_REQUIRED` - Required Node.js version (default: `22.21.1`)
 
+## 🌐 Domain Configuration & Hosts File Setup
+
+### **GO_DOMAIN Explained**
+The `GO_DOMAIN` variable determines what short domain your GoUrls application uses:
+
+- **Default**: `go` → Access via http://go/
+- **Custom**: `links` → Access via http://links/  
+- **Corporate**: `company` → Access via http://company/
+
+### **Automatic Hosts File Management**
+Both development scripts automatically manage your system's hosts file:
+
+**Development Environment (`startup.sh`):**
+```bash
+./startup.sh --start-all     # Automatically configures hosts
+./startup.sh --setup-hosts   # Manual hosts setup
+./startup.sh --check-hosts   # Verify configuration
+./startup.sh --remove-hosts  # Remove hosts entry
+```
+
+**Docker Deployment (`deploy-gourls.sh`):**
+```bash
+./deploy-gourls.sh --start        # Automatically configures hosts
+./deploy-gourls.sh --setup-hosts  # Manual hosts setup
+./deploy-gourls.sh --check-hosts  # Verify configuration
+./deploy-gourls.sh --remove-hosts # Remove hosts entry
+```
+
+### **What Happens During Setup**
+1. **Backup Creation**: Automatic `/etc/hosts` backup
+2. **Entry Addition**: Adds `127.0.0.1 go` (or your custom domain)
+3. **Permission Prompt**: Requests sudo access if needed
+4. **Verification**: Confirms successful configuration
+
+### **Manual Hosts Configuration**
+If you prefer manual setup, add this line to `/etc/hosts`:
+```bash
+127.0.0.1   go
+```
+
+**On macOS/Linux:**
+```bash
+sudo echo "127.0.0.1   go" >> /etc/hosts
+```
+
+**On Windows:**
+Edit `C:\Windows\System32\drivers\etc\hosts` as Administrator
+
 ## 🐛 Troubleshooting
 
 ### **"No .env.local found" Warning**

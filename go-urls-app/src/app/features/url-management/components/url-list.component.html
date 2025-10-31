@@ -24,7 +24,9 @@
       <tr *ngFor="let entry of filteredEntries">
         <td>
           <ng-container *ngIf="editingId !== (entry.id ? entry.id.toString() : null); else editShortNameField">
-            {{ entry.shortName }}
+            <a [href]="goDomain + '/' + entry.shortName" target="_blank" class="text-decoration-none">
+              {{ entry.shortName }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+            </a>
           </ng-container>
           <ng-template #editShortNameField>
             <input type="text" class="form-control" style="width: 120px;" [(ngModel)]="editShortName" />
@@ -32,7 +34,9 @@
         </td>
         <td>
           <ng-container *ngIf="editingId !== (entry.id ? entry.id.toString() : null); else editLongUrlField">
-            {{ entry.longUrl }}
+            <a [href]="entry.longUrl" target="_blank" class="text-decoration-none text-truncate d-inline-block" style="max-width: 300px;" [title]="entry.longUrl">
+              {{ entry.longUrl }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+            </a>
           </ng-container>
           <ng-template #editLongUrlField>
             <div class="d-flex align-items-center">

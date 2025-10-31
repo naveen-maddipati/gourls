@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { UrlManagementService } from '../services/url-management.service';
 import { UrlEntry } from '../models/url-entry.model';
 import { Observable } from 'rxjs';
+import { Go_Domain } from '../../../core/constants';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -22,6 +23,7 @@ export class UrlListComponent {
   bannerMessage: string = '';
   bannerType: string = 'info';
   showDeleteModal: boolean = false;
+  goDomain = Go_Domain; // Make Go_Domain available in template
   deleteTarget: UrlEntry | null = null;
 
   openDeleteModal(entry: UrlEntry) {

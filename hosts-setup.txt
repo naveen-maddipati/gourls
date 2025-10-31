@@ -1,8 +1,0 @@
-# GoUrls Local Development Setup
-# Add this line to your /etc/hosts file to enable go domain
-
-127.0.0.1   go
-
-# To add this to your hosts file, run:
-# sudo echo "127.0.0.1   go" >> /etc/hosts
-# or edit /etc/hosts manually with sudo privileges

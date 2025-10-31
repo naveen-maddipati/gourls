@@ -10,17 +10,36 @@ namespace GoUrlsApi.Controllers
     [Route("api/[controller]")]
     public class UrlsController : ControllerBase
     {
+        private readonly GoUrlsDbContext _context;
+        private readonly string[] _reservedWords;
+
+        public UrlsController(GoUrlsDbContext context)
+        {
+            _context = context;
+            
+            // Read reserved words from environment variable - no fallback
+            var reservedWordsStr = Environment.GetEnvironmentVariable("RESERVED_WORDS");
+            if (string.IsNullOrEmpty(reservedWordsStr))
+            {
+                throw new InvalidOperationException("RESERVED_WORDS environment variable is not set");
+            }
+            
+            _reservedWords = reservedWordsStr.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                           .Select(w => w.Trim().ToLower())
+                                           .ToArray();
+        }
+
         [HttpGet("user")]
         public IActionResult GetCurrentUser()
         {
             var user = User.Identity?.Name ?? "Unknown User";
             return Ok(new { name = user });
         }
-        private readonly GoUrlsDbContext _context;
 
-        public UrlsController(GoUrlsDbContext context)
+        [HttpGet("reserved-words")]
+        public IActionResult GetReservedWords()
         {
-            _context = context;
+            return Ok(new { reservedWords = _reservedWords });
         }
         private static int NextId = 1;
 
@@ -46,6 +65,21 @@ namespace GoUrlsApi.Controllers
         }
 
         [HttpGet("redirect/{shortName}")]
+        public async Task<IActionResult> RedirectToLongUrl(string shortName)
+        {
+            var entry = await _context.Urls.FirstOrDefaultAsync(u => u.ShortName == shortName);
+            if (entry == null)
+            {
+                // Instead of 404, redirect to create page with shortName as parameter
+                var createUrl = $"/create?shortName={Uri.EscapeDataString(shortName)}&available=true";
+                return Redirect(createUrl);
+            }
+            
+            // Perform HTTP redirect to the long URL
+            return Redirect(entry.LongUrl);
+        }
+
+        [HttpGet("{shortName}")]
         public async Task<ActionResult<UrlEntry>> GetByShortName(string shortName)
         {
             var entry = await _context.Urls.FirstOrDefaultAsync(u => u.ShortName == shortName);
@@ -59,7 +93,27 @@ namespace GoUrlsApi.Controllers
         [HttpPost]
         public async Task<ActionResult<UrlEntry>> Add([FromBody] UrlEntry entry)
         {
+            // Validate against reserved words
+            if (_reservedWords.Contains(entry.ShortName.Trim().ToLower()))
+            {
+                return BadRequest(new { 
+                    error = "Reserved word", 
+                    message = $"'{entry.ShortName}' is a reserved word and cannot be used as a short URL." 
+                });
+            }
+
+            // Check if short name already exists
+            var existingEntry = await _context.Urls.FirstOrDefaultAsync(u => u.ShortName.ToLower() == entry.ShortName.Trim().ToLower());
+            if (existingEntry != null)
+            {
+                return BadRequest(new { 
+                    error = "Duplicate", 
+                    message = $"Short name '{entry.ShortName}' is already taken." 
+                });
+            }
+
             entry.Id = Guid.NewGuid();
+            entry.ShortName = entry.ShortName.Trim();
             _context.Urls.Add(entry);
             await _context.SaveChangesAsync();
             return Ok(entry);

@@ -2,14 +2,17 @@
 
 ## 📚 Documentation
 
-For detailed documentation, see the [`docs/`](./docs/) folder:
-- **[📖 Configuration Guide](./docs/CONFIGURATION.md)** - Complete configuration management
-- **[📖 Documentation Index](./docs/README.md)** - All available documentation
+For detailed documentation, see the [`documentation/`](./documentation/) folder:
+## 📋 Quick Links
+
+- **[Development Setup](./documentation/CONFIGURATION.md)** - Environment configuration and setup
+- **[Docker Deployment](./documentation/DEPLOY-GOURLS.md)** - Complete containerized deployment guide
+- **[Documentation Index](./documentation/README.md)** - All project documentation
 
 ## 🎯 One Script, All Commands!
 
 ```bash
-./startup.sh --start-all
+./scripts/startup.sh --start-all
 ```
 
 **That's it! One script replaces all the complexity.**
@@ -22,54 +25,56 @@ For detailed documentation, see the [`docs/`](./docs/) folder:
 
 | Command | Purpose |
 |---------|---------|
-| `./startup.sh --start-all` | 🚀 Start all services |
-| `./startup.sh --stop-all` | 🛑 Stop all services |
-| `./startup.sh --restart` | 🔄 Restart all services |
-| `./startup.sh --status` | 🔍 Check status of all services |
-| `./startup.sh --restart-service <service>` | 🔄 Restart specific service |
-| `./startup.sh --help` | ❓ Show help and examples |
+| `./scripts/startup.sh --start-all` | 🚀 Start all services |
+| `./scripts/startup.sh --stop-all` | 🛑 Stop all services |
+| `./scripts/startup.sh --restart` | 🔄 Restart all services |
+| `./scripts/startup.sh --status` | 🔍 Check status of all services |
+| `./scripts/startup.sh --restart-service <service>` | 🔄 Restart specific service |
+| `./scripts/startup.sh --help` | ❓ Show help and examples |
 
 ## 🎮 Common Usage
 
 ### Starting Development
 ```bash
-# Start everything
-./startup.sh --start-all
+# Start everything (includes automatic hosts setup for 'go' domain)
+./scripts/startup.sh --start-all
 
 # Check if everything is working
-./startup.sh --status
+./scripts/startup.sh --status
 ```
+
+> **Note**: The first run will prompt for your password to configure the hosts file, enabling access via http://go/
 
 ### During Development
 ```bash
 # Restart just Angular after making changes
-./startup.sh --restart-service angular
+./scripts/startup.sh --restart-service angular
 
 # Restart just the API
-./startup.sh --restart-service api
+./scripts/startup.sh --restart-service api
 
 # Restart nginx if proxy issues
-./startup.sh --restart-service nginx
+./scripts/startup.sh --restart-service nginx
 
 # Restart database
-./startup.sh --restart-service postgres
+./scripts/startup.sh --restart-service postgres
 ```
 
 ### Quick Restart
 ```bash
 # Restart everything (stop + start)
-./startup.sh --restart
+./scripts/startup.sh --restart
 ```
 
 ### Ending Development
 ```bash
 # Stop everything
-./startup.sh --stop-all
+./scripts/startup.sh --stop-all
 ```
 
 ## 🌐 Access URLs
 
-After running `./startup.sh --start-all`, you can access:
+After running `./scripts/startup.sh --start-all`, you can access:
 
 - **Main App**: http://go
 - **Angular Direct**: http://localhost:4200
@@ -81,7 +86,7 @@ After running `./startup.sh --start-all`, you can access:
 
 1. **Check status**:
    ```bash
-   ./startup.sh --status
+   ./scripts/startup.sh --status
    ```
 
 2. **View logs**:
@@ -92,15 +97,15 @@ After running `./startup.sh --start-all`, you can access:
 
 3. **Restart specific service**:
    ```bash
-   ./startup.sh --restart-service angular
-   ./startup.sh --restart-service api
-   ./startup.sh --restart-service nginx
-   ./startup.sh --restart-service postgres
+   ./scripts/startup.sh --restart-service angular
+   ./scripts/startup.sh --restart-service api
+   ./scripts/startup.sh --restart-service nginx
+   ./scripts/startup.sh --restart-service postgres
    ```
 
 4. **Full restart**:
    ```bash
-   ./startup.sh --restart
+   ./scripts/startup.sh --restart
    ```
 
 ## ✨ Features
@@ -171,7 +176,7 @@ GoUrls uses a layered configuration system that separates safe defaults from sen
 ### 📖 Detailed Configuration Guide
 
 For comprehensive information about configuration management, see:  
-**[📖 docs/CONFIGURATION.md](./docs/CONFIGURATION.md)**
+**[📖 documentation/CONFIGURATION.md](./documentation/CONFIGURATION.md)**
 
 This guide covers:
 - 🔧 How different `.env` files work together
