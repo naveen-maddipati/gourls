@@ -1,12 +1,76 @@
 #!/bin/bash
 
 # GoUrls Development Environment Manager
-# Usage: ./dev.sh [--start-all|--stop-all|--restart|--status|--restart-service <service>|--help]
+# Usage: ./startup.sh [--start-all|--stop-all|--restart|--status|--restart-service <service>|--help]
 
 set -e  # Exit on any error
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOGS_DIR="$SCRIPT_DIR/logs"
+
+# Load environment configuration
+load_env_config() {
+    local defaults_file="$SCRIPT_DIR/.env.defaults"
+    local local_file="$SCRIPT_DIR/.env.local"
+    local legacy_env_file="$SCRIPT_DIR/.env"
+    
+    # Load defaults first (non-sensitive, committed to git)
+    if [[ -f "$defaults_file" ]]; then
+        echo "🔧 Loading default configuration from .env.defaults..."
+        set -a  # Automatically export all variables
+        source "$defaults_file"
+        set +a  # Stop auto-exporting
+    fi
+    
+    # Load local overrides (sensitive data, not committed)
+    if [[ -f "$local_file" ]]; then
+        echo "🔧 Loading local overrides from .env.local..."
+        set -a  # Automatically export all variables
+        source "$local_file"
+        set +a  # Stop auto-exporting
+    elif [[ -f "$legacy_env_file" ]]; then
+        echo "🔧 Loading configuration from legacy .env file..."
+        echo "   💡 Consider migrating to .env.defaults + .env.local structure"
+        set -a  # Automatically export all variables
+        source "$legacy_env_file"
+        set +a  # Stop auto-exporting
+    else
+        echo "⚠️  No configuration files found."
+        echo "   Create .env.local from .env.local.example for local settings"
+    fi
+    
+    # Set default values for any missing variables
+    PROJECT_NAME=${PROJECT_NAME:-gourls}
+    GO_DOMAIN=${GO_DOMAIN:-go}
+    NGINX_PORT=${NGINX_PORT:-80}
+    ANGULAR_PORT=${ANGULAR_PORT:-4200}
+    API_PORT=${API_PORT:-5165}
+    POSTGRES_PORT=${POSTGRES_PORT:-5431}
+    POSTGRES_HOST=${POSTGRES_HOST:-127.0.0.1}
+    POSTGRES_DB=${POSTGRES_DB:-gourls}
+    POSTGRES_USER=${POSTGRES_USER:-postgres}
+    POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password123}
+    POSTGRES_CONTAINER_NAME=${POSTGRES_CONTAINER_NAME:-gourls-postgres}
+    POSTGRES_VERSION=${POSTGRES_VERSION:-15}
+    API_PROJECT_DIR=${API_PROJECT_DIR:-GoUrlsApi}
+    ANGULAR_PROJECT_DIR=${ANGULAR_PROJECT_DIR:-go-urls-app}
+    NODE_VERSION_REQUIRED=${NODE_VERSION_REQUIRED:-22.21.1}
+    NGINX_CONFIG_FILE=${NGINX_CONFIG_FILE:-nginx-go-proxy.conf}
+    
+    # Set computed values
+    LOGS_DIR="${LOGS_DIR:-logs}"
+    # Ensure LOGS_DIR is absolute
+    if [[ ! "$LOGS_DIR" = /* ]]; then
+        LOGS_DIR="$SCRIPT_DIR/$LOGS_DIR"
+    fi
+    ANGULAR_URL="http://localhost:${ANGULAR_PORT}"
+    API_URL="http://localhost:${API_PORT}"
+    API_HEALTH_URL="http://localhost:${API_PORT}/api/urls"
+    GO_URL="http://${GO_DOMAIN}"
+    DB_CONNECTION_STRING="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+}
+
+# Load configuration first
+load_env_config
 
 # Colors for output
 RED='\033[0;31m'
@@ -78,6 +142,28 @@ wait_for_service() {
     return 1
 }
 
+# Function to generate nginx config from template
+generate_nginx_config() {
+    local template_file="$SCRIPT_DIR/nginx-go-proxy.conf.template"
+    local output_file="$SCRIPT_DIR/$NGINX_CONFIG_FILE"
+    
+    if [[ -f "$template_file" ]]; then
+        log_info "Generating nginx config from template..."
+        
+        # Use sed to replace template variables with actual values
+        sed -e "s|{{NGINX_PORT}}|$NGINX_PORT|g" \
+            -e "s|{{GO_DOMAIN}}|$GO_DOMAIN|g" \
+            -e "s|{{ANGULAR_URL}}|$ANGULAR_URL|g" \
+            -e "s|{{ANGULAR_PORT}}|$ANGULAR_PORT|g" \
+            -e "s|{{API_URL}}|$API_URL|g" \
+            "$template_file" > "$output_file"
+        
+        log_success "nginx config generated: $output_file"
+    else
+        log_info "No nginx template found, using existing config file"
+    fi
+}
+
 # Function to stop service by PID file
 stop_service_by_pid() {
     local service_name=$1
@@ -134,23 +220,23 @@ setup_nodejs() {
 start_postgresql() {
     log_header "2️⃣ Starting PostgreSQL Database"
     
-    if check_service "PostgreSQL" "docker ps | grep gourls-postgres"; then
+    if check_service "PostgreSQL" "docker ps | grep $POSTGRES_CONTAINER_NAME"; then
         log_success "PostgreSQL is already running"
     else
-        if docker ps -a | grep gourls-postgres > /dev/null; then
+        if docker ps -a | grep $POSTGRES_CONTAINER_NAME > /dev/null; then
             log_info "Starting existing PostgreSQL container..."
-            docker start gourls-postgres
+            docker start $POSTGRES_CONTAINER_NAME
         else
             log_info "Creating new PostgreSQL container..."
-            docker run -d --name gourls-postgres \
-                -e POSTGRES_DB=gourls \
-                -e POSTGRES_USER=postgres \
-                -e POSTGRES_PASSWORD=password123 \
-                -p 5431:5432 \
-                postgres:15
+            docker run -d --name $POSTGRES_CONTAINER_NAME \
+                -e POSTGRES_DB=$POSTGRES_DB \
+                -e POSTGRES_USER=$POSTGRES_USER \
+                -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+                -p $POSTGRES_PORT:5432 \
+                postgres:$POSTGRES_VERSION
         fi
         
-        wait_for_service "PostgreSQL" "docker ps | grep gourls-postgres"
+        wait_for_service "PostgreSQL" "docker ps | grep $POSTGRES_CONTAINER_NAME"
     fi
 }
 
@@ -158,17 +244,22 @@ start_postgresql() {
 start_api() {
     log_header "3️⃣ Starting .NET API"
     
-    if check_service ".NET API" "curl -s http://localhost:5165/api/urls -o /dev/null"; then
+    if check_service ".NET API" "curl -s $API_HEALTH_URL -o /dev/null"; then
         log_success ".NET API is already running"
     else
         log_info "Starting .NET API in background..."
-        cd "$SCRIPT_DIR/GoUrlsApi"
+        cd "$SCRIPT_DIR/$API_PROJECT_DIR"
+        
+        # Set environment variables for .NET application
+        export ConnectionStrings__DefaultConnection="$DB_CONNECTION_STRING"
+        export ASPNETCORE_URLS="http://localhost:$API_PORT"
+        
         nohup dotnet run > "$LOGS_DIR/api.log" 2>&1 &
         API_PID=$!
         echo $API_PID > "$LOGS_DIR/api.pid"
         cd "$SCRIPT_DIR"
         
-        wait_for_service ".NET API" "curl -s http://localhost:5165/api/urls -o /dev/null"
+        wait_for_service ".NET API" "curl -s $API_HEALTH_URL -o /dev/null"
     fi
 }
 
@@ -176,14 +267,17 @@ start_api() {
 start_nginx() {
     log_header "4️⃣ Starting nginx Proxy"
     
-    if check_service "nginx" "curl -s http://go -o /dev/null"; then
+    # Generate nginx config from template if available
+    generate_nginx_config
+    
+    if check_service "nginx" "curl -s $GO_URL -o /dev/null"; then
         log_success "nginx is already running"
     else
         # Stop any existing nginx
         sudo nginx -s stop 2>/dev/null || true
         
         log_info "Starting nginx with custom configuration..."
-        sudo nginx -c "$SCRIPT_DIR/nginx-go-proxy.conf"
+        sudo nginx -c "$SCRIPT_DIR/$NGINX_CONFIG_FILE"
         
         wait_for_service "nginx" "ps aux | grep nginx | grep -v grep"
     fi
@@ -193,11 +287,11 @@ start_nginx() {
 start_angular() {
     log_header "5️⃣ Starting Angular Development Server"
     
-    if check_service "Angular" "curl -s http://localhost:4200 -o /dev/null"; then
+    if check_service "Angular" "curl -s $ANGULAR_URL -o /dev/null"; then
         log_success "Angular is already running"
     else
         log_info "Starting Angular dev server in background..."
-        cd "$SCRIPT_DIR/go-urls-app"
+        cd "$SCRIPT_DIR/$ANGULAR_PROJECT_DIR"
         
         # Start Angular in background
         nohup npm start > "$LOGS_DIR/angular.log" 2>&1 &
@@ -205,7 +299,7 @@ start_angular() {
         echo $ANGULAR_PID > "$LOGS_DIR/angular.pid"
         cd "$SCRIPT_DIR"
         
-        wait_for_service "Angular" "curl -s http://localhost:4200 -o /dev/null"
+        wait_for_service "Angular" "curl -s $ANGULAR_URL -o /dev/null"
     fi
 }
 
@@ -217,26 +311,26 @@ health_check() {
     
     log_info "Testing services..."
     
-    if docker ps | grep gourls-postgres > /dev/null; then
+    if docker ps | grep $POSTGRES_CONTAINER_NAME > /dev/null; then
         log_success "PostgreSQL: Running (Docker)"
     else
         log_error "PostgreSQL: Not running"
     fi
     
-    if curl -s http://localhost:5165/api/urls -o /dev/null; then
-        log_success ".NET API: Running on http://localhost:5165"
+    if curl -s $API_HEALTH_URL -o /dev/null; then
+        log_success ".NET API: Running on $API_URL"
     else
         log_error ".NET API: Not responding"
     fi
     
-    if curl -s http://localhost:4200 -o /dev/null; then
-        log_success "Angular: Running on http://localhost:4200"
+    if curl -s $ANGULAR_URL -o /dev/null; then
+        log_success "Angular: Running on $ANGULAR_URL"
     else
         log_error "Angular: Not responding"
     fi
     
-    if curl -s http://go -o /dev/null; then
-        log_success "nginx Proxy: Working at http://go"
+    if curl -s $GO_URL -o /dev/null; then
+        log_success "nginx Proxy: Working at $GO_URL"
     else
         log_error "nginx Proxy: Not working"
     fi
@@ -257,9 +351,9 @@ start_all() {
     log_header "🎉 DEVELOPMENT ENVIRONMENT READY!"
     echo ""
     echo "📱 Access your application:"
-    echo "   🔗 Main URL: http://go"
-    echo "   🔗 Direct Angular: http://localhost:4200"
-    echo "   🔗 API: http://localhost:5165"
+    echo "   🔗 Main URL: $GO_URL"
+    echo "   🔗 Direct Angular: $ANGULAR_URL"
+    echo "   🔗 API: $API_URL"
     echo ""
     echo "📊 Service Status:"
     echo "   🐘 Database: PostgreSQL (Docker port 5431)"
@@ -362,9 +456,9 @@ restart_service() {
     
     echo ""
     echo "🔍 Service status:"
-    echo "  API: http://localhost:5165"
-    echo "  Angular: http://localhost:4200"
-    echo "  App: http://go"
+    echo "  API: $API_URL"
+    echo "  Angular: $ANGULAR_URL"
+    echo "  App: $GO_URL"
 }
 
 # Show status
@@ -388,9 +482,9 @@ show_status() {
     echo ""
     log_info "🌐 Web Services:"
     echo "---------------"
-    check_service_status "Angular Dev Server" "http://localhost:4200"
-    check_service_status "Go Links Domain" "http://go"
-    check_service_status ".NET API" "http://localhost:5165/api/urls"
+    check_service_status "Angular Dev Server" "$ANGULAR_URL"
+    check_service_status "Go Links Domain" "$GO_URL"
+    check_service_status ".NET API" "$API_URL/api/urls"
     
     echo ""
     log_info "🐘 Database:"
@@ -413,17 +507,17 @@ show_status() {
     echo ""
     log_info "📊 Port Status:"
     echo "--------------"
-    echo "Port 80 (nginx):"
-    lsof -i :80 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
+    echo "Port $NGINX_PORT (nginx):"
+    lsof -i :$NGINX_PORT 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
     
-    echo "Port 4200 (Angular):"
-    lsof -i :4200 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
+    echo "Port $ANGULAR_PORT (Angular):"
+    lsof -i :$ANGULAR_PORT 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
     
-    echo "Port 5165 (API):"
-    lsof -i :5165 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
+    echo "Port $API_PORT (API):"
+    lsof -i :$API_PORT 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
     
-    echo "Port 5431 (PostgreSQL):"
-    lsof -i :5431 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
+    echo "Port $POSTGRES_PORT (PostgreSQL):"
+    lsof -i :$POSTGRES_PORT 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
     
     echo ""
     log_info "📁 Process IDs:"
@@ -483,9 +577,9 @@ show_help() {
     echo "  ./dev.sh --stop-all                     # Stop everything"
     echo ""
     echo "Access URLs after starting:"
-    echo "  🔗 Main App: http://go"
-    echo "  🔗 Angular: http://localhost:4200"
-    echo "  🔗 API: http://localhost:5165"
+    echo "  🔗 Main App: $GO_URL"
+    echo "  🔗 Angular: $ANGULAR_URL"
+    echo "  🔗 API: $API_URL"
 }
 
 # Main script logic

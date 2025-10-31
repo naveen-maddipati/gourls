@@ -1,0 +1,25 @@
+# Environment configuration (contains sensitive data)
+.env
+.env.local
+
+# Development logs
+logs/
+
+# .NET build outputs
+**/bin/
+**/obj/
+
+# Angular build outputs
+dist/
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Backup directories
+*.backup/

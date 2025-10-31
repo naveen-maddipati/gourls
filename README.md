@@ -1,5 +1,11 @@
 # 🚀 GoUrls Development Environment - Simple Management
 
+## 📚 Documentation
+
+For detailed documentation, see the [`docs/`](./docs/) folder:
+- **[📖 Configuration Guide](./docs/CONFIGURATION.md)** - Complete configuration management
+- **[📖 Documentation Index](./docs/README.md)** - All available documentation
+
 ## 🎯 One Script, All Commands!
 
 ```bash
@@ -137,5 +143,41 @@ After running `./startup.sh --start-all`, you can access:
 # Day 2: Quick start
 ./startup.sh --start-all
 ```
+
+## ⚙️ Configuration System
+
+GoUrls uses a layered configuration system that separates safe defaults from sensitive data.
+
+### 🚀 Quick Setup
+
+1. **Create your local configuration:**
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. **Set your database password:**
+   ```bash
+   # Edit .env.local
+   POSTGRES_PASSWORD=your_secure_password
+   ```
+
+3. **Start developing:**
+   ```bash
+   ./startup.sh --start-all
+   ```
+
+**That's it!** The system automatically loads defaults + your overrides.
+
+### 📖 Detailed Configuration Guide
+
+For comprehensive information about configuration management, see:  
+**[📖 docs/CONFIGURATION.md](./docs/CONFIGURATION.md)**
+
+This guide covers:
+- 🔧 How different `.env` files work together
+- 🛡️ Security best practices  
+- 🎯 Real-world configuration examples
+- 🐛 Troubleshooting configuration issues
+- 🚀 Production deployment settings
 
 **No more confusion - just one script with clear commands!** 🚀

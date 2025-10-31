@@ -1,0 +1,42 @@
+# nginx Configuration Template for GoUrls
+# This file will be used to generate the actual nginx config from environment variables
+
+worker_processes 1;
+events {
+    worker_connections 1024;
+}
+
+http {
+    # Main Go domain server
+    server {
+        listen {{NGINX_PORT}};
+        server_name {{GO_DOMAIN}};
+        
+        # Main proxy to Angular app
+        location / {
+            proxy_pass {{ANGULAR_URL}};
+            proxy_set_header Host localhost:{{ANGULAR_PORT}};
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            # WebSocket support for Angular dev server
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+        
+        # Static assets proxy
+        location /assets/ {
+            proxy_pass {{ANGULAR_URL}}/assets/;
+        }
+        
+        # API proxy (if needed for direct API access via go domain)
+        location /api/ {
+            proxy_pass {{API_URL}}/api/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+}
