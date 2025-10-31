@@ -4,7 +4,7 @@
 - Organize code by feature modules (e.g., `/src/app/features/go-url/`).
 - Place shared components, directives, and pipes in a `/shared/` folder.
 - Store core services and singleton providers in a `/core/` folder.
-- Keep assets (images, styles, etc.) in the `/assets/` folder.
+- Keep assets (styles, fonts, etc.) in the `/assets/` folder.
 - Use clear, descriptive names for files and folders (e.g., `go-url-list`, `go-url-detail`).
 - Avoid deep nesting; keep folder hierarchy simple and maintainable.
 - Group unit tests with their respective components (e.g., `component-name.component.spec.ts`).
