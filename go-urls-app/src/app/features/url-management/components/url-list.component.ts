@@ -17,6 +17,8 @@ import { FormsModule } from '@angular/forms';
 })
 export class UrlListComponent {
 // ...existing imports and @Component remain at the top of the file...
+  Math = Math; // Make Math available in template
+  
   goHome() {
     this.router.navigate(['/']);
   }
@@ -44,6 +46,7 @@ export class UrlListComponent {
       this.urlService.getUrls().subscribe(entries => {
         this.allEntries = entries;
         this.filteredEntries = entries;
+        this.updatePagination();
       });
       setTimeout(() => this.bannerMessage = '', 3000);
       this.closeDeleteModal();
@@ -53,6 +56,7 @@ export class UrlListComponent {
     this.urlService.getUrls().subscribe(entries => {
       this.allEntries = entries;
       this.filteredEntries = entries;
+      this.updatePagination();
     });
   }
   urlEntries$: Observable<UrlEntry[]>;
@@ -62,6 +66,64 @@ export class UrlListComponent {
   editingId: string | null = null;
   editShortName: string = '';
   editLongUrl: string = '';
+
+  // Pagination properties
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalItems: number = 0;
+  totalPages: number = 0;
+  paginatedEntries: UrlEntry[] = [];
+  pageNumbers: number[] = [];
+
+  // Pagination methods
+  updatePagination() {
+    this.totalItems = this.filteredEntries.length;
+    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+    this.currentPage = Math.min(this.currentPage, Math.max(1, this.totalPages));
+    
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedEntries = this.filteredEntries.slice(startIndex, endIndex);
+    
+    this.updatePageNumbers();
+  }
+
+  updatePageNumbers() {
+    this.pageNumbers = [];
+    const maxPageButtons = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxPageButtons / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxPageButtons - 1);
+    
+    // Adjust startPage if we're near the end
+    if (endPage - startPage + 1 < maxPageButtons) {
+      startPage = Math.max(1, endPage - maxPageButtons + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      this.pageNumbers.push(i);
+    }
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
+  }
+
+  previousPage() {
+    this.goToPage(this.currentPage - 1);
+  }
+
+  nextPage() {
+    this.goToPage(this.currentPage + 1);
+  }
+
+  changeItemsPerPage(newSize: number) {
+    this.itemsPerPage = newSize;
+    this.currentPage = 1;
+    this.updatePagination();
+  }
   startEdit(entry: UrlEntry) {
     this.editingId = entry.id ? entry.id.toString() : null;
     if (typeof entry.shortName === 'string') {
@@ -81,6 +143,7 @@ export class UrlListComponent {
       this.urlService.getUrls().subscribe(entries => {
         this.allEntries = entries;
         this.filteredEntries = entries;
+        this.updatePagination();
       });
       this.editingId = null;
       this.editShortName = '';
@@ -100,6 +163,7 @@ export class UrlListComponent {
     this.urlEntries$.subscribe(entries => {
       this.allEntries = entries;
       this.filteredEntries = entries;
+      this.updatePagination();
     });
   }
 
@@ -107,6 +171,8 @@ export class UrlListComponent {
     this.filteredEntries = this.allEntries.filter(e =>
       e.shortName.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
+    this.currentPage = 1; // Reset to first page when filtering
+    this.updatePagination();
   }
 
   search() {
@@ -114,10 +180,14 @@ export class UrlListComponent {
       // If search is empty, show all
       this.urlService.getUrls().subscribe(entries => {
         this.filteredEntries = entries;
+        this.currentPage = 1;
+        this.updatePagination();
       });
     } else {
       this.urlService.searchShortName(this.searchTerm).subscribe(entries => {
         this.filteredEntries = entries;
+        this.currentPage = 1;
+        this.updatePagination();
         this.bannerMessage = 'Search completed.';
         this.bannerType = 'info';
         setTimeout(() => this.bannerMessage = '', 2000);

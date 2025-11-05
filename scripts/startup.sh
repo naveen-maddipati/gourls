@@ -476,12 +476,14 @@ start_postgresql() {
                 # Run migrations
                 if dotnet ef database update --no-build 2>/dev/null; then
                     log_success "Database migrations completed successfully"
+                    log_info "Note: Seed data will be automatically restored when API starts"
                 else
                     log_warning "Migration failed, will retry after API starts"
                 fi
                 cd "$SCRIPT_DIR"
             else
                 log_success "Database schema already exists"
+                log_info "Note: Missing seed data will be automatically restored when API starts"
             fi
         else
             log_warning "Database may still be initializing, this is normal for new containers"
@@ -906,6 +908,103 @@ show_database_status() {
     fi
 }
 
+# Database migration management
+run_migrations() {
+    log_header "🗄️ Running Database Migrations"
+    
+    if ! docker ps | grep "$POSTGRES_CONTAINER_NAME" > /dev/null; then
+        log_error "Development database is not running"
+        log_info "Start the database first: ./startup.sh --start-all"
+        return 1
+    fi
+    
+    log_info "Running EF Core migrations on development database..."
+    cd "$SCRIPT_DIR/../$API_PROJECT_DIR"
+    
+    # Set the connection string for migrations
+    export ConnectionStrings__DefaultConnection="$DB_CONNECTION_STRING"
+    
+    # Run migrations
+    if dotnet ef database update; then
+        log_success "Database migrations completed successfully"
+        log_info "This includes any seed data from EF Core seeding"
+    else
+        log_error "Migration failed"
+        return 1
+    fi
+    cd "$SCRIPT_DIR"
+}
+
+# Reset development database
+reset_database() {
+    log_header "🔄 Resetting Development Database"
+    
+    log_warning "This will completely reset the development database!"
+    log_warning "All data will be lost, including manually created URLs."
+    echo ""
+    echo -n "Are you sure you want to continue? (type 'yes' to confirm): "
+    read confirmation
+    
+    if [ "$confirmation" != "yes" ]; then
+        log_info "Database reset cancelled"
+        return 0
+    fi
+    
+    log_info "Stopping and removing development database container..."
+    docker stop "$POSTGRES_CONTAINER_NAME" 2>/dev/null || true
+    docker rm "$POSTGRES_CONTAINER_NAME" 2>/dev/null || true
+    
+    log_info "Removing database volume..."
+    docker volume rm "${POSTGRES_CONTAINER_NAME}_data" 2>/dev/null || true
+    
+    log_info "Recreating fresh database..."
+    start_postgresql
+    
+    log_info "Running all migrations including seed data..."
+    run_migrations
+    
+    log_success "Development database has been reset with fresh seed data!"
+}
+
+# Check seed data
+check_seed_data() {
+    log_header "📊 Checking Seed Data"
+    
+    if ! docker ps | grep "$POSTGRES_CONTAINER_NAME" > /dev/null; then
+        log_error "Development database is not running"
+        log_info "Start the database first: ./startup.sh --start-all"
+        return 1
+    fi
+    
+    log_info "Checking for seed data in development database..."
+    
+    # Check if API is running
+    if ! curl -s http://localhost:$API_PORT/api/urls -o /dev/null; then
+        log_warning "API is not running, checking database directly..."
+        
+        local count=$(docker exec $POSTGRES_CONTAINER_NAME psql -U $POSTGRES_USER -d $POSTGRES_DB -t -c "SELECT COUNT(*) FROM \"Urls\" WHERE \"Id\" LIKE '550e8400-e29b-41d4-a716-44665544000%';" 2>/dev/null | tr -d ' ')
+        
+        if [[ "$count" =~ ^[0-9]+$ ]] && [ "$count" -gt 0 ]; then
+            log_success "Found $count seeded URL entries in database"
+        else
+            log_warning "No seed data found in database"
+            log_info "Run migrations to add seed data: ./startup.sh --run-migrations"
+        fi
+    else
+        log_info "Checking seed data via API..."
+        local seed_urls=$(curl -s http://localhost:$API_PORT/api/urls | jq -r '.[] | select(.id | startswith("550e8400-e29b-41d4-a716-44665544000")) | .shortName' 2>/dev/null)
+        
+        if [ -n "$seed_urls" ]; then
+            local count=$(echo "$seed_urls" | wc -l | tr -d ' ')
+            log_success "Found $count seeded URL entries:"
+            echo "$seed_urls" | sed 's/^/   • /'
+        else
+            log_warning "No seed data found"
+            log_info "Run migrations to add seed data: ./startup.sh --run-migrations"
+        fi
+    fi
+}
+
 # Show help
 show_help() {
     echo "🚀 ${PROJECT_NAME} Development Environment Manager"
@@ -925,6 +1024,12 @@ show_help() {
     echo "  --check-hosts            ✅ Check if hosts file is configured"
     echo "  --generate-constants     📝 Generate Angular constants from environment"
     echo "  --generate-configs       ⚙️  Generate Angular configuration files from environment"
+    echo ""
+    echo "Database Management:"
+    echo "  --run-migrations         🗄️ Run EF Core migrations (includes seed data)"
+    echo "  --reset-database         🔄 Reset development database with fresh seed data"
+    echo "  --check-seed-data        📊 Check if seed data is present in database"
+    echo ""
     echo "  --help                   ❓ Show this help message"
     echo ""
     echo "Available services for --restart-service:"
@@ -936,6 +1041,9 @@ show_help() {
     echo "  ./startup.sh --db-status                    # Check database isolation"
     echo "  ./startup.sh --restart-service angular      # Restart just Angular"
     echo "  ./startup.sh --setup-hosts                  # Configure hosts file"
+    echo "  ./startup.sh --run-migrations               # Apply latest migrations & seed data"
+    echo "  ./startup.sh --check-seed-data              # Verify seed data is present"
+    echo "  ./startup.sh --reset-database               # Fresh database with seed data"
     echo "  ./startup.sh --stop-all                     # Stop everything"
     echo ""
     echo "Access URLs after starting:"
@@ -996,6 +1104,15 @@ case "${1:-}" in
         generate_angular_constants
         generate_angular_configs
         log_success "Angular configuration files generated successfully"
+        ;;
+    --run-migrations)
+        run_migrations
+        ;;
+    --reset-database)
+        reset_database
+        ;;
+    --check-seed-data)
+        check_seed_data
         ;;
     --help|-h|help)
         show_help
