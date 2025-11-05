@@ -17,27 +17,29 @@
     </div>
   </form>
   <h3 class="mb-3">All URLs</h3>
-  <table class="table table-striped table-bordered w-100">
-    <thead>
-      <tr>
-        <th>Short Name</th>
-        <th>Long URL</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let entry of allEntries">
-        <td>
-          <a [href]="goDomain + '/' + entry.shortName" target="_blank" class="text-decoration-none">
-            {{ entry.shortName }} <i class="bi bi-box-arrow-up-right ms-1"></i>
-          </a>
-        </td>
-        <td>
-          <a [href]="entry.longUrl" target="_blank" class="text-decoration-none text-truncate d-inline-block" style="max-width: 300px;" [title]="entry.longUrl">
-            {{ entry.longUrl }} <i class="bi bi-box-arrow-up-right ms-1"></i>
-          </a>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Short Name</th>
+          <th style="width: 70%;">Long URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let entry of allEntries">
+          <td>
+            <a [href]="goDomain + '/' + entry.shortName" target="_blank" class="text-decoration-none">
+              {{ entry.shortName }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+            </a>
+          </td>
+          <td class="text-break">
+            <a [href]="entry.longUrl" target="_blank" class="text-decoration-none" [title]="entry.longUrl">
+              {{ entry.longUrl }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
   <div *ngIf="allEntries.length === 0" class="mt-4 text-muted">No records found.</div>
 </div>

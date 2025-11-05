@@ -31,47 +31,49 @@
       Filtered by: "{{ searchTerm }}"
     </div>
   </div>
-  <table class="table table-striped table-bordered w-100">
-    <thead>
-      <tr>
-        <th>Short Name</th>
-        <th>Long URL</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let entry of paginatedEntries">
-        <td>
-          <ng-container *ngIf="editingId !== (entry.id ? entry.id.toString() : null); else editShortNameField">
-            <a [href]="goDomain + '/' + entry.shortName" target="_blank" class="text-decoration-none">
-              {{ entry.shortName }} <i class="bi bi-box-arrow-up-right ms-1"></i>
-            </a>
-          </ng-container>
-          <ng-template #editShortNameField>
-            <input type="text" class="form-control" style="width: 120px;" [(ngModel)]="editShortName" />
-          </ng-template>
-        </td>
-        <td>
-          <ng-container *ngIf="editingId !== (entry.id ? entry.id.toString() : null); else editLongUrlField">
-            <a [href]="entry.longUrl" target="_blank" class="text-decoration-none text-truncate d-inline-block" style="max-width: 300px;" [title]="entry.longUrl">
-              {{ entry.longUrl }} <i class="bi bi-box-arrow-up-right ms-1"></i>
-            </a>
-          </ng-container>
-          <ng-template #editLongUrlField>
-            <div class="d-flex align-items-center">
-              <input type="text" class="form-control" style="width: 220px;" [(ngModel)]="editLongUrl" />
-              <button class="btn btn-primary btn-sm ms-2" (click)="saveEdit(entry)">Save</button>
-              <button class="btn btn-danger btn-sm ms-2" (click)="cancelEdit()">Cancel</button>
-            </div>
-          </ng-template>
-        </td>
-        <td>
-          <button class="btn btn-info btn-sm me-2" (click)="startEdit(entry)">Edit</button>
-          <button class="btn btn-danger btn-sm" (click)="openDeleteModal(entry)">Delete</button>
-        </td>
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th style="width: 20%;">Short Name</th>
+          <th style="width: 60%;">Long URL</th>
+          <th style="width: 20%;">Actions</th>
         </tr>
-</tbody>
-  </table>
+      </thead>
+      <tbody>
+        <tr *ngFor="let entry of paginatedEntries">
+          <td>
+            <ng-container *ngIf="editingId !== (entry.id ? entry.id.toString() : null); else editShortNameField">
+              <a [href]="goDomain + '/' + entry.shortName" target="_blank" class="text-decoration-none">
+                {{ entry.shortName }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+              </a>
+            </ng-container>
+            <ng-template #editShortNameField>
+              <input type="text" class="form-control" [(ngModel)]="editShortName" />
+            </ng-template>
+          </td>
+          <td class="text-break">
+            <ng-container *ngIf="editingId !== (entry.id ? entry.id.toString() : null); else editLongUrlField">
+              <a [href]="entry.longUrl" target="_blank" class="text-decoration-none" [title]="entry.longUrl">
+                {{ entry.longUrl }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+              </a>
+            </ng-container>
+            <ng-template #editLongUrlField>
+              <div class="d-flex align-items-center">
+                <input type="text" class="form-control flex-grow-1" [(ngModel)]="editLongUrl" />
+                <button class="btn btn-primary btn-sm ms-2" (click)="saveEdit(entry)">Save</button>
+                <button class="btn btn-danger btn-sm ms-2" (click)="cancelEdit()">Cancel</button>
+              </div>
+            </ng-template>
+          </td>
+          <td>
+            <button class="btn btn-info btn-sm me-2" (click)="startEdit(entry)">Edit</button>
+            <button class="btn btn-danger btn-sm" (click)="openDeleteModal(entry)">Delete</button>
+          </td>
+          </tr>
+  </tbody>
+    </table>
+  </div>
 
   <!-- Pagination Controls -->
   <div class="d-flex justify-content-between align-items-center mt-4" *ngIf="totalPages > 1">
