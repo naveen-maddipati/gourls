@@ -31,7 +31,6 @@ http {
 
 server {
     listen {{NGINX_PORT}};
-    listen 80;
     server_name {{GO_DOMAIN}} localhost;
 
     # API routing (highest priority - specific paths)
