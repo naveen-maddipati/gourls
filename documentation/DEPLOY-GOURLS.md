@@ -33,9 +33,17 @@ All services run in isolated containers with proper networking, health checks, a
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
 │  │    nginx    │    │  Angular    │    │  .NET API   │     │
 │  │   (proxy)   │◄──►│ (frontend)  │◄──►│ (backend)   │     │
-│  │   Port 80   │    │  Port 8080  │    │  Port 5000  │     │
+│  │   Port 80   │    │  Container  │    │  Port 5000  │     │
+│  │             │    │             │    │             │     │
+│  │ Go Links:   │    │ Management  │    │ CRUD & Auth │     │
+│  │ /shortname  │    │ Interface   │    │ Operations  │     │
+│  │ ↓ 302       │    │             │    │             │     │
+│  │ Redirect    │    │             │    │             │     │
 │  └─────────────┘    └─────────────┘    └─────┬───────┘     │
 │         │                                     │             │
+│         │   API Routes: /api/*               │             │
+│         │   Frontend: /*                     │             │
+│         │   Go Links: /[a-zA-Z0-9_-]+       │             │
 │         │              ┌─────────────────────┘             │
 │         │              │                                   │
 │         │              ▼                                   │
@@ -47,10 +55,19 @@ All services run in isolated containers with proper networking, health checks, a
 │         │                                                 │
 │         ▼                                                 │
 │  ┌─────────────┐                                          │
-│  │   Host      │  http://localhost                       │
-│  │   Port 80   │  http://go (if configured)              │
+│  │   User      │                                          │
+│  │   Browser   │  Production: http://go/shortname         │
+│  │             │  Development: http://go.local:2080/      │
 │  └─────────────┘                                          │
 └─────────────────────────────────────────────────────────────┘
+
+Request Flow for Go Links:
+1. User → http://go/workday
+2. nginx → /api/urls/redirect/workday
+3. API → Database lookup
+4. API → 302 Location: https://target-url.com
+5. nginx → 302 response to user
+6. User → Redirected to target URL
 ```
 
 ## 📦 Prerequisites
@@ -78,54 +95,106 @@ All services run in isolated containers with proper networking, health checks, a
 git clone https://github.com/naveen-maddipati/gourls.git
 cd gourls
 
-# Make deployment script executable
-chmod +x deploy-gourls.sh
-
-# Copy environment template (optional)
-cp .env.docker.example .env.docker
+# Setup script permissions
+chmod +x docker/init-db/01-init.sh
 ```
 
-### 2. Deploy
+### 2. Deploy Production Environment
 ```bash
-# Start the complete application (includes automatic hosts setup)
-./deploy-gourls.sh --start
+# Start production environment (port 80, clean URLs)
+docker-compose --env-file environments/.env.production up -d --build
 
-# Check status
-./deploy-gourls.sh --status
+# Check all containers are healthy
+docker ps --format "table {{.Names}}\t{{.Status}}"
 ```
 
-### 3. Access
-- **Go Domain**: http://go/ (automatically configured)
-- **Main Application**: http://localhost
-- **API Documentation**: http://localhost:5000/api/urls
-- **Frontend Direct**: http://localhost:8080
+### 3. Deploy Development Environment  
+```bash
+# Start development environment (port 2080, with port numbers)
+docker-compose --env-file environments/.env.development up -d --build
+```
 
-> **Note**: The `--start` command automatically configures your hosts file for the `go` domain. You may be prompted for your password to modify `/etc/hosts`.
+### 4. Access
+**Production Environment:**
+- **Main Application**: http://go/ (clean URLs)
+- **API Endpoints**: http://go/api/urls
+- **Go Link Redirects**: http://go/shortname → automatic redirect
+
+**Development Environment:**
+- **Main Application**: http://go.local:2080/
+- **Angular Direct**: http://localhost:2200
+- **API Direct**: http://localhost:2165
+
+> **Note**: Both environments run in parallel with isolated databases and different port strategies.
 
 ## ⚙️ Configuration
 
 ### Environment Files
 
-#### `.env.docker`
-Main configuration file for Docker deployment:
-```bash
-# Port configuration
-NGINX_PORT=80
-API_PORT=5000
-FRONTEND_PORT=8080
-POSTGRES_PORT=5432
+GoUrls uses a dual-environment configuration system:
 
-# Database configuration  
+#### `environments/.env.production`
+Production Docker environment with clean URLs:
+```bash
+# Production Settings (Clean URLs)
+PROJECT_NAME=gourls
+GO_DOMAIN=go                 # Production domain
+
+# Production Ports (port 80 for clean URLs)
+NGINX_PORT=80                # nginx proxy (standard HTTP)
+FRONTEND_PORT=3200           # Angular container
+API_PORT=3000                # .NET Core API
+POSTGRES_PORT=3432           # PostgreSQL
+
+# Frontend Build Configuration
+FRONTEND_BASE_URL=/
+FRONTEND_API_URL=/api
+IS_PRODUCTION=true
+
+# Database Configuration
 POSTGRES_DB=gourls
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_secure_password
-
-# Application environment
-ASPNETCORE_ENVIRONMENT=Production
+POSTGRES_PASSWORD=gourls_secure_password
 ```
 
-#### `.env.docker.example`
-Template file showing all available configuration options.
+#### `environments/.env.development`
+Development environment with port-based access:
+```bash
+# Development Settings (Port-based URLs)
+PROJECT_NAME=gourls
+GO_DOMAIN=go.local           # Development domain
+
+# Development Ports
+NGINX_PORT=2080              # nginx proxy with port
+FRONTEND_PORT=2200           # Angular dev server
+API_PORT=2165                # .NET Core API
+POSTGRES_PORT=2431           # PostgreSQL
+
+# Frontend Build Configuration
+FRONTEND_BASE_URL=http://localhost:2165/
+FRONTEND_API_URL=/api
+IS_PRODUCTION=false
+
+# Database Configuration (isolated from production)
+POSTGRES_DB=gourls_dev
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password123
+```
+
+### **Port Strategy**
+| Environment | Port Range | nginx | Frontend | API | Database | Domain |
+|-------------|------------|-------|----------|-----|----------|---------|
+| **Development** | **2000-2999** | 2080 | 2200 | 2165 | 2431 | `go.local` |
+| **Production** | **3000-3999** | 80* | 3200 | 3000 | 3432 | `go` |
+
+> **Port Range Benefits**: Dedicated ranges prevent conflicts, enable parallel environments, and provide clear separation between dev/prod
+
+### **Zero Hardcoding System**
+✅ **Zero Hardcoded Values**: All configuration driven by environment variables  
+✅ **Parallel Environments**: Run both dev and prod simultaneously  
+✅ **Parameterized Docker Builds**: Frontend constants generated dynamically  
+✅ **Container Dependencies**: Proper health check chain (postgres → api → nginx)  
+✅ **Port Strategy**: Production uses clean URLs, development uses numbered ports
 
 ### Customization Options
 
@@ -156,20 +225,60 @@ POSTGRES_SHARED_BUFFERS=256MB
 
 ## 🎮 Deployment Commands
 
-### Basic Operations
+### Production Environment
 ```bash
+# Start production (clean URLs on port 80)
+docker-compose --env-file environments/.env.production up -d --build
+
+# Stop production
+docker-compose --env-file environments/.env.production down
+
+# View production logs
+docker-compose --env-file environments/.env.production logs -f
+
+# Restart production services
+docker-compose --env-file environments/.env.production restart
+
+# Check production status
+docker-compose --env-file environments/.env.production ps
+```
+
+### Development Environment
 ```bash
-# Start services
-./deploy-gourls.sh --start
+# Start development (port-based URLs)
+docker-compose --env-file environments/.env.development up -d --build
 
-# Stop services
-./deploy-gourls.sh --stop
+# Stop development
+docker-compose --env-file environments/.env.development down
 
-# Restart services
-./deploy-gourls.sh --restart
+# View development logs
+docker-compose --env-file environments/.env.development logs -f
+```
 
-# Check status
-./deploy-gourls.sh --status
+### Both Environments
+```bash
+# Run both environments in parallel
+docker-compose --env-file environments/.env.production up -d --build
+docker-compose --env-file environments/.env.development up -d --build
+
+# Production: http://go/ (port 80)
+# Development: http://go.local:2080/ (port 2080)
+```
+
+### Container Management
+```bash
+# Check all GoUrls containers
+docker ps --format "table {{.Names}}\t{{.Status}}" | grep gourls
+
+# View specific service logs
+docker logs gourls-nginx --tail=20
+docker logs gourls-api --tail=20
+docker logs gourls-frontend --tail=20
+docker logs gourls-postgres --tail=20
+
+# Access container shell
+docker exec -it gourls-api /bin/bash
+docker exec -it gourls-postgres psql -U postgres -d gourls
 ```
 
 ### 📊 Monitoring Commands
@@ -383,6 +492,41 @@ BACKUP_FILE="gourls_backup_$(date +%Y%m%d_%H%M%S).sql"
 
 ## 🔍 Troubleshooting
 
+### Container Startup Issues
+
+#### All Containers Don't Start with `up -d --build`
+**Symptom**: Only some containers start, API/nginx missing
+**Cause**: Database init script permission issue causing dependency cascade failure
+
+**Solution**:
+```bash
+# Fix init script permissions
+chmod +x docker/init-db/01-init.sh
+
+# Clean restart
+docker-compose --env-file environments/.env.production down --volumes
+docker-compose --env-file environments/.env.production up -d --build
+```
+
+#### Go Links Return HTML Instead of Redirects
+**Symptom**: `curl http://go/shortname` returns Angular HTML instead of 302 redirect
+**Root Causes**: 
+1. nginx upstream container names incorrect
+2. Frontend making `/api/api/` requests (double API path)
+3. nginx location regex not matching properly
+
+**Solution**: Verify nginx logs and container names:
+```bash
+# Check nginx error logs
+docker logs gourls-nginx --tail=20
+
+# Verify container names match nginx.conf upstreams
+docker ps --format "{{.Names}}" | grep gourls
+
+# Test API endpoint directly
+curl -v http://go/api/urls/redirect/shortname
+```
+
 ### Common Issues
 
 #### Services Won't Start
@@ -390,46 +534,51 @@ BACKUP_FILE="gourls_backup_$(date +%Y%m%d_%H%M%S).sql"
 # Check Docker daemon
 sudo systemctl status docker
 
-# Check port conflicts
+# Check port conflicts  
 netstat -tulpn | grep :80
 lsof -i :80
 
-# Check logs for errors
-./deploy-gourls.sh logs
+# Check container logs
+docker-compose --env-file environments/.env.production logs
 ```
 
 #### Database Connection Issues
 ```bash
 # Check PostgreSQL health
-./deploy-gourls.sh shell postgres
-psql -U postgres -d gourls -c "SELECT version();"
+docker exec gourls-postgres pg_isready -U postgres
 
-# Reset database
-./deploy-gourls.sh stop
-docker volume rm gourls_postgres_data
-./deploy-gourls.sh start
+# Access database directly
+docker exec -it gourls-postgres psql -U postgres -d gourls
+
+# Reset database volume
+docker-compose --env-file environments/.env.production down --volumes
+docker-compose --env-file environments/.env.production up -d postgres
 ```
 
-#### Frontend Not Loading
+#### Frontend API Calls Failing
+**Symptom**: 404 errors for `/api/api/urls` requests
+**Cause**: Frontend `Base_Url` configuration incorrect
+
+**Solution**: Check frontend container constants:
 ```bash
-# Check nginx configuration
-./deploy-gourls.sh logs nginx
+# Verify frontend build args in docker-compose.yml
+grep -A 10 "frontend:" docker-compose.yml
 
-# Test direct frontend access
-curl http://localhost:8080
-
-# Rebuild frontend
-./deploy-gourls.sh build
+# Rebuild frontend with correct args
+docker-compose --env-file environments/.env.production build frontend
+docker-compose --env-file environments/.env.production restart frontend
 ```
 
-#### API Errors
+#### nginx Redirect Issues
 ```bash
-# Check API logs
-./deploy-gourls.sh logs api
+# Check nginx configuration syntax
+docker exec gourls-nginx nginx -t
 
-# Check database connectivity from API
-./deploy-gourls.sh shell api
-curl http://localhost:5000/api/urls
+# View nginx access logs for redirect patterns
+docker logs gourls-nginx | grep -E "(302|redirect)"
+
+# Test upstream connectivity from nginx
+docker exec gourls-nginx curl -v http://gourls-api:5000/api/urls
 ```
 
 ### Performance Issues

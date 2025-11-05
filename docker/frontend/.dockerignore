@@ -1,0 +1,10 @@
+node_modules
+dist
+.angular
+coverage
+.nyc_output
+e2e
+*.spec.ts
+*.log
+.DS_Store
+Thumbs.db

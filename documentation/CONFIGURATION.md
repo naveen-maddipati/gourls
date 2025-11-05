@@ -1,82 +1,216 @@
 # 🔧 Configuration Management Guide
 
-This guide explains how the GoUrls project manages configuration using environment files. Understanding this system will help you customize the project for your needs while maintaining security best practices.
+This guide explains how the GoUrls project manages configuration using environment files for both development and production Docker environments.
 
-## 📁 Configuration File Types
+## 📁 Environment Configuration Systems
 
-### 1. **`.env.defaults` (Committed to Git)** 
-**Purpose:** Base configuration that the whole team shares
+GoUrls uses two distinct configuration systems:
 
-**Contains:**
-- ✅ Port numbers (4200, 5165, 80)
-- ✅ Container names and versions
-- ✅ Project settings and paths
-- ✅ Non-sensitive application defaults
-- ❌ **No passwords or sensitive data**
+### 1. **Development Environment** (Local Process-based)
+Uses the layered `.env` file system for local development:
+- `.env.defaults` (committed) - Team shared defaults
+- `.env.local` (ignored) - Your personal overrides and secrets
+- Legacy `.env` support for backward compatibility
+
+### 2. **Production Environment** (Docker Container-based)  
+Uses dedicated environment files for containerized deployment:
+- `environments/.env.production` - Production Docker configuration
+- `environments/.env.development` - Development Docker configuration
+
+## � Docker Environment Files
+
+### **`environments/.env.production`**
+**Purpose:** Production containerized environment with clean URLs
+
+**Key Features:**
+- ✅ **Clean URLs**: Uses port 80 for `http://go/` access
+- ✅ **Zero Hardcoding**: All values parameterized
+- ✅ **Production Database**: Isolated `gourls` database
+- ✅ **Container Orchestration**: Proper dependency chains
 
 **Example:**
 ```bash
-# Project configuration
+# Production Settings
 PROJECT_NAME=gourls
 GO_DOMAIN=go
 
-# Port assignments
-NGINX_PORT=80
-ANGULAR_PORT=4200
-API_PORT=5165
-POSTGRES_PORT=5431
+# Production Ports (Clean URLs)
+NGINX_PORT=80                 # Standard HTTP port
+FRONTEND_PORT=3200            # Angular container
+API_PORT=3000                 # .NET Core API
+POSTGRES_PORT=3432            # PostgreSQL
 
-# Container configuration
-POSTGRES_CONTAINER_NAME=gourls-postgres
-POSTGRES_VERSION=15
+# Frontend Build Configuration (No Hardcoding)
+FRONTEND_BASE_URL=/           # Dynamic build args
+FRONTEND_API_URL=/api
+IS_PRODUCTION=true
+
+# Database Configuration
+POSTGRES_DB=gourls
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=gourls_secure_password
+
+# Container Names (Parameterized)
+API_CONTAINER=gourls-api
+FRONTEND_CONTAINER=gourls-frontend
+NGINX_CONTAINER=gourls-nginx
+POSTGRES_CONTAINER=gourls-postgres
 ```
 
-### 2. **`.env.local.example` (Committed to Git)**
-**Purpose:** Template showing what sensitive settings you need
+### **`environments/.env.development`**  
+**Purpose:** Development containerized environment with port-based URLs
 
-**Contains:**
-- 🔐 **Password placeholders** with safe examples
-- 💡 **Commented examples** of common overrides
-- 📋 **Instructions** on how to customize
-- ❌ **No real passwords**
+**Key Features:**
+- ✅ **Port-based URLs**: Uses port 2080 for `http://go.local:2080/`
+- ✅ **Parallel Operation**: Runs alongside production without conflicts
+- ✅ **Development Database**: Isolated `gourls_dev` database
+- ✅ **Hot Reload**: Supports development workflow
 
 **Example:**
 ```bash
-# Database password - CHANGE THIS!
+# Development Settings  
+PROJECT_NAME=gourls
+GO_DOMAIN=go.local
+
+# Development Ports (With Port Numbers)
+NGINX_PORT=2080               # Development with port
+FRONTEND_PORT=2200            # Angular container  
+API_PORT=2165                 # .NET Core API
+POSTGRES_PORT=2431            # PostgreSQL
+
+# Frontend Build Configuration
+FRONTEND_BASE_URL=http://localhost:2165/
+FRONTEND_API_URL=/api
+IS_PRODUCTION=false
+
+# Database Configuration (Isolated)
+POSTGRES_DB=gourls_dev        # Separate dev database
+POSTGRES_USER=postgres
 POSTGRES_PASSWORD=password123
-
-# Optional overrides (uncomment as needed):
-# ANGULAR_PORT=4201
-# API_PORT=5166
-# POSTGRES_DB=gourls_test
 ```
 
-### 3. **`.env.local` (Never Committed)**
-**Purpose:** Your actual sensitive settings and personal customizations
+## 🚀 Usage Examples
 
-**Contains:**
-- 🔐 **Real passwords and secrets**
-- ⚙️ **Personal port overrides** (if you have conflicts)
-- 🎯 **Machine-specific settings**
-- 🔒 **Production credentials** (on servers)
-
-**Example:**
+### **Production Deployment**
 ```bash
-# Required: Database password
-POSTGRES_PASSWORD=my_secure_password_2024
+# Start production (port 80, clean URLs)
+docker-compose --env-file environments/.env.production up -d --build
 
-# Optional: Personal overrides
-ANGULAR_PORT=4201  # Port 4200 conflicts with my other project
-API_PORT=5166      # Port 5165 in use by another service
+# Access: http://go/
+# API: http://go/api/urls
+# Go Links: http://go/shortname → 302 redirect
 ```
 
-### 4. **`.env.example` (Legacy)**
-**Purpose:** Old-style comprehensive example file (maintained for compatibility)
+### **Development Deployment**
+```bash
+# Start development (port 2080, port-based)
+docker-compose --env-file environments/.env.development up -d --build
 
-**Contains:**
-- 📋 **Complete example** of all possible settings
-- 💡 **Detailed documentation** and comments
-- 🔄 **Single-file approach** (traditional method)
+# Access: http://go.local:2080/
+# API: http://localhost:2165/api/urls
+```
+
+### **Parallel Environments**
+```bash
+# Run both simultaneously
+docker-compose --env-file environments/.env.production up -d --build
+docker-compose --env-file environments/.env.development up -d --build
+
+# Production: http://go/
+# Development: http://go.local:2080/
+```
+
+## 🔧 Key Configuration Variables
+
+### **Port Range Strategy**
+GoUrls uses dedicated port ranges to avoid conflicts between environments and with other services:
+
+| Environment | Port Range | nginx | Frontend | API | Database | Domain |
+|-------------|------------|-------|----------|-----|----------|---------|
+| **Development** | **2000-2999** | 2080 | 2200 | 2165 | 2431 | `go.local` |
+| **Production** | **3000-3999** | 80* | 3200 | 3000 | 3432 | `go` |
+
+> **Note**: Production nginx uses port 80 for clean URLs, but internal container ports follow the 3000+ range
+
+### **Port Range Benefits:**
+✅ **Conflict Avoidance**: Dedicated ranges prevent port collisions  
+✅ **Clear Separation**: Easy to identify environment by port number  
+✅ **Scalability**: Room for additional services within each range  
+✅ **Predictable**: Consistent numbering pattern for troubleshooting  
+
+### **Port Allocation Rules:**
+- **2xxx ports**: Development environment (local processes + containers)
+- **3xxx ports**: Production environment (Docker containers)
+- **Reserved ranges**: 2000-2099 and 3000-3099 for future expansion
+- **Service ports**: Allocated in 100s (nginx: x080, frontend: x200, API: x1xx, DB: x4xx)
+
+### **Zero Hardcoding System**
+All previously hardcoded values are now parameterized:
+
+**Frontend Docker Build Args:**
+- `FRONTEND_BASE_URL` - Dynamic API base URL generation
+- `FRONTEND_API_URL` - API endpoint configuration  
+- `IS_PRODUCTION` - Environment-specific build flags
+- `GO_DOMAIN` - Dynamic domain configuration
+
+**Container Configuration:**
+- All container names use variables: `${API_CONTAINER}`
+- All ports use variables: `${NGINX_PORT}:${FRONTEND_INTERNAL_PORT}`
+- All network names use variables: `${NETWORK_NAME}`
+- All restart policies use variables: `${RESTART_POLICY}`
+
+### **Database Isolation**
+- **Production**: `gourls` database on port 3432
+- **Development**: `gourls_dev` database on port 2431
+- **Parallel Operation**: No data conflicts between environments
+
+## 🎯 Migration from Legacy System
+
+### **If you have old `.env.docker` files:**
+The new system replaces single-file Docker configuration:
+
+```bash
+# Old way (deprecated)
+cp .env.docker.example .env.docker
+docker-compose up -d
+
+# New way (current)
+# No copying needed - use environment files directly
+docker-compose --env-file environments/.env.production up -d --build
+```
+
+### **Benefits of New System:**
+✅ **Parallel Environments**: Run dev/prod simultaneously  
+✅ **Zero Hardcoding**: Complete parameterization  
+✅ **Clear Separation**: Production vs development concerns  
+✅ **Container Dependencies**: Proper health check chains  
+✅ **Dynamic Builds**: Frontend constants generated from environment  
+
+## 🔐 Security & Best Practices
+
+### **Production Security:**
+```bash
+# Change default passwords
+POSTGRES_PASSWORD=super_secure_production_password_2024
+
+# Use strong container names
+API_CONTAINER=company-gourls-api-prod
+```
+
+### **Development Flexibility:**
+```bash
+# Override ports if conflicts exist
+NGINX_PORT=8080     # If port 2080 conflicts
+API_PORT=5166       # If port 2165 conflicts
+```
+
+### **Environment Isolation:**
+- Each environment has its own database
+- Different container names prevent conflicts
+- Separate port ranges avoid collisions
+- Independent configuration files
+
+This dual-environment system provides maximum flexibility while maintaining security and enabling both development and production workflows to coexist seamlessly! 🚀
 
 ## 🔄 How Configuration Loading Works
 

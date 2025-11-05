@@ -76,9 +76,41 @@ For detailed documentation, see the [`documentation/`](./documentation/) folder:
 
 After running `./scripts/startup.sh --start-all`, you can access:
 
-- **Main App**: http://go
-- **Angular Direct**: http://localhost:4200
-- **API Direct**: http://localhost:5165
+- **Main App**: http://go.local:2080 (development environment)
+- **Angular Direct**: http://localhost:2200
+- **API Direct**: http://localhost:2165
+
+## 🐳 Docker Production Environment
+
+For production deployment with Docker:
+
+```bash
+# Start production environment (clean URLs on port 80)
+docker-compose --env-file environments/.env.production up -d --build
+
+# Access production
+# Main App: http://go/ (port 80)
+# API: http://go/api/
+```
+
+## 📋 Environment Configuration
+
+GoUrls uses a dual-environment system with dedicated port ranges:
+
+### **Port Range Strategy**
+- **Development Environment**: **2000-2999 range** 
+  - nginx: 2080, Frontend: 2200, API: 2165, Database: 2431
+  - Access: `http://go.local:2080/`
+  
+- **Production Environment**: **3000-3999 range**
+  - nginx: 80 (clean URLs), Frontend: 3200, API: 3000, Database: 3432  
+  - Access: `http://go/`
+
+### **Configuration Files**
+- **Development**: `environments/.env.development` - Local development with ports (go.local:2080)
+- **Production**: `environments/.env.production` - Docker containers with clean URLs (go/)
+
+All configuration is fully parameterized with zero hardcoded values.
 
 ## 🔧 Troubleshooting
 

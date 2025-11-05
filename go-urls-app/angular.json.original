@@ -38,8 +38,6 @@
               }
             ],
             "styles": [
-              "node_modules/bootstrap/dist/css/bootstrap.min.css",
-              "node_modules/bootstrap-icons/font/bootstrap-icons.css",
               "src/styles.css"
             ],
             "scripts": []
@@ -73,19 +71,17 @@
           "options": {
             "buildTarget": "go-urls-app:build:development",
             "proxyConfig": "proxy.conf.json",
-            "allowedHosts": ["{{GO_DOMAIN}}", "localhost"],
-            "port": {{FRONTEND_PORT}}
+            "allowedHosts": ["go.local", "localhost"]
           },
           "configurations": {
             "production": {
               "buildTarget": "go-urls-app:build:production",
-              "allowedHosts": ["{{GO_DOMAIN}}", "localhost"]
+              "allowedHosts": ["go.local", "localhost"]
             },
             "development": {
               "buildTarget": "go-urls-app:build:development",
               "proxyConfig": "proxy.conf.json",
-              "allowedHosts": ["{{GO_DOMAIN}}", "localhost"],
-              "port": {{FRONTEND_PORT}}
+              "allowedHosts": ["go.local", "localhost"]
             }
           },
           "defaultConfiguration": "development"

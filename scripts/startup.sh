@@ -51,7 +51,7 @@ load_env_config() {
     PROJECT_NAME=${PROJECT_NAME:-gourls}
     GO_DOMAIN=${GO_DOMAIN:-go}
     NGINX_PORT=${NGINX_PORT:-80}
-    ANGULAR_PORT=${ANGULAR_PORT:-4200}
+    FRONTEND_PORT=${FRONTEND_PORT:-4200}    # Use FRONTEND_PORT consistently
     API_PORT=${API_PORT:-5165}
     POSTGRES_PORT=${POSTGRES_PORT:-5431}
     POSTGRES_HOST=${POSTGRES_HOST:-127.0.0.1}
@@ -72,7 +72,7 @@ load_env_config() {
     if [[ ! "$LOGS_DIR" = /* ]]; then
         LOGS_DIR="$SCRIPT_DIR/$LOGS_DIR"
     fi
-    ANGULAR_URL="http://localhost:${ANGULAR_PORT}"
+    ANGULAR_URL="http://localhost:${FRONTEND_PORT}"
     API_URL="http://localhost:${API_PORT}"
     API_HEALTH_URL="http://localhost:${API_PORT}/api/urls"
     GO_URL="http://${GO_DOMAIN}"
@@ -223,6 +223,18 @@ setup_hosts() {
             return 1
         fi
     fi
+    
+    # Show access information
+    log_info "Access configuration:"
+    if [[ "$GO_DOMAIN" == "go.local" ]]; then
+        echo "   � Environment: Development"
+        echo "   🔗 URL: http://$GO_DOMAIN:$NGINX_PORT"
+        echo "   🔌 Port: $NGINX_PORT (dev range: 2001-2999)"
+    else
+        echo "   🏭 Environment: Production"  
+        echo "   🔗 URL: http://$GO_DOMAIN:$NGINX_PORT"
+        echo "   🔌 Port: $NGINX_PORT (prod range: 3001-3999)"
+    fi
 }
 
 # Function to check if a service is running
@@ -281,7 +293,7 @@ generate_nginx_config() {
         sed -e "s|{{NGINX_PORT}}|$NGINX_PORT|g" \
             -e "s|{{GO_DOMAIN}}|$GO_DOMAIN|g" \
             -e "s|{{ANGULAR_URL}}|$ANGULAR_URL|g" \
-            -e "s|{{ANGULAR_PORT}}|$ANGULAR_PORT|g" \
+            -e "s|{{FRONTEND_PORT}}|$FRONTEND_PORT|g" \
             -e "s|{{API_URL}}|$API_URL|g" \
             -e "s#{{RESERVED_PATTERN}}#$reserved_pattern#g" \
             "$template_file" > "$output_file"
@@ -289,6 +301,24 @@ generate_nginx_config() {
         log_success "nginx config generated: $output_file"
     else
         log_info "No nginx template found, using existing config file"
+    fi
+}
+
+# Function to generate launchSettings.json from template
+generate_launch_settings() {
+    local template_file="$SCRIPT_DIR/../GoUrlsApi/Properties/launchSettings.json.template"
+    local output_file="$SCRIPT_DIR/../GoUrlsApi/Properties/launchSettings.json"
+    
+    if [[ -f "$template_file" ]]; then
+        log_info "Generating launchSettings.json from template..."
+        
+        # Use sed to replace template variables with actual values
+        sed -e "s|{{API_PORT}}|$API_PORT|g" \
+            "$template_file" > "$output_file"
+        
+        log_success "launchSettings.json generated: $output_file"
+    else
+        log_info "No launchSettings template found, using existing config file"
     fi
 }
 
@@ -331,6 +361,7 @@ generate_angular_configs() {
         log_info "Generating angular.json from template..."
         
         sed -e "s/{{GO_DOMAIN}}/$GO_DOMAIN/g" \
+            -e "s/{{FRONTEND_PORT}}/$FRONTEND_PORT/g" \
             "$angular_template" > "$angular_config"
         
         log_success "Angular config generated: $angular_config"
@@ -495,6 +526,9 @@ start_postgresql() {
 start_api() {
     log_header "3️⃣ Starting .NET API"
     
+    # Generate launchSettings.json from template if available
+    generate_launch_settings
+    
     if check_service ".NET API" "curl -s $API_HEALTH_URL -o /dev/null"; then
         log_success ".NET API is already running"
     else
@@ -553,6 +587,13 @@ start_angular() {
         cd "$SCRIPT_DIR/../$ANGULAR_PROJECT_DIR"
         
         # Ensure nvm environment is available for Angular process
+        if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+            nvm use "v$NODE_VERSION_REQUIRED" 2>/dev/null || true
+        fi
+        
+        # Ensure we use the correct Node.js version
         if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
             export NVM_DIR="$HOME/.nvm"
             source "$NVM_DIR/nvm.sh"
@@ -624,9 +665,9 @@ start_all() {
     log_header "🎉 DEVELOPMENT ENVIRONMENT READY!"
     echo ""
     echo "📱 Access your application:"
-    echo "   🔗 Main URL: $GO_URL"
-    echo "   🔗 Direct Angular: $ANGULAR_URL"
-    echo "   🔗 API: $API_URL"
+    echo "   🔗 Main URL: http://$GO_DOMAIN:$NGINX_PORT"
+    echo "   🔗 Direct Angular: http://localhost:$FRONTEND_PORT"
+    echo "   🔗 API: http://localhost:$API_PORT"
     echo ""
     echo "📊 Service Status:"
     echo "   🐘 Database: PostgreSQL (Development - port $POSTGRES_PORT)"
@@ -634,7 +675,7 @@ start_all() {
     echo "   📦 Container: $POSTGRES_CONTAINER_NAME"
     echo "   🌐 Proxy: nginx (port $NGINX_PORT)"
     echo "   🔧 API: .NET Core (port $API_PORT)"
-    echo "   ⚡ Frontend: Angular (port $ANGULAR_PORT)"
+    echo "   ⚡ Frontend: Angular (port $FRONTEND_PORT)"
     echo ""
     echo "🔒 Environment Isolation:"
     echo "   ✅ Development database is isolated from production"
@@ -803,8 +844,8 @@ show_status() {
     echo "Port $NGINX_PORT (nginx):"
     lsof -i :$NGINX_PORT 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
     
-    echo "Port $ANGULAR_PORT (Angular):"
-    lsof -i :$ANGULAR_PORT 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
+    echo "Port $FRONTEND_PORT (Angular):"
+    lsof -i :$FRONTEND_PORT 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"
     
     echo "Port $API_PORT (API):"
     lsof -i :$API_PORT 2>/dev/null | grep LISTEN || echo "  ❌ Nothing listening"

@@ -1,0 +1,15 @@
+// 🚀 Application Constants
+// This file is auto-generated from environment variables
+// DO NOT EDIT MANUALLY - Changes will be overwritten
+
+export const Base_Url = '{{BASE_URL}}';
+export const Go_Domain = '{{GO_DOMAIN_URL}}';
+
+// Environment information
+export const Environment = {
+  apiUrl: '{{API_URL}}',
+  goDomain: '{{GO_DOMAIN_URL}}',
+  domain: '{{GO_DOMAIN}}',
+  isProduction: {{IS_PRODUCTION}},
+  generatedAt: '{{GENERATED_AT}}'
+};

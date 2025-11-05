@@ -132,20 +132,38 @@ GoUrls_Code/
 
 ## Development Workflow
 ### Getting Started
-1. Run `./setup-dev.sh` for one-time environment setup
-2. Use `./start-dev.sh` to start the development environment
-3. Access the app at `http://go/` or `http://localhost:4200/`
-4. Use `./stop-dev.sh` to stop all services
+1. **Development Environment (Local)**:
+   ```bash
+   # Start development with port-based URLs
+   ./scripts/startup.sh --start-all
+   # Access: http://go.local:2080/
+   ```
+
+2. **Production Environment (Docker)**:
+   ```bash
+   # Start production with clean URLs
+   docker-compose --env-file environments/.env.production up -d --build
+   # Access: http://go/
+   ```
+
+### Dual Environment System
+- **Development**: Uses numbered ports (2080, 2200, 2165, 2431) for local development
+- **Production**: Uses standard ports (80, 3200, 3000, 3432) for clean URLs
+- **Parallel Operation**: Both environments can run simultaneously with isolated databases
+- **Zero Hardcoding**: All configuration driven by environment variables in `/environments/`
 
 ### Database Management
-- PostgreSQL runs in Docker container on port 5431
+- **Development**: PostgreSQL on localhost:2431 (gourls_dev database)
+- **Production**: PostgreSQL in Docker on port 3432 (gourls database)
 - Use `dotnet ef migrations add <name>` for schema changes
 - Apply migrations with `dotnet ef database update`
 - Access database via MCP server for queries and debugging
 
-### URL Testing
-- Create short URLs in the application
-- Test redirects via `http://go/shortname`
+### URL Testing & Go Links
+- **Development**: Create short URLs at http://go.local:2080/
+- **Production**: Create short URLs at http://go/
+- **Test redirects**: nginx handles go links directly with 302 redirects
+- **Redirect flow**: http://go/shortname → API lookup → 302 to target URL
 - Use browser dev tools to debug redirect issues
 - Check nginx logs for proxy-related problems
 
