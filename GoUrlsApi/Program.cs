@@ -66,7 +66,11 @@ try
         new { Id = Guid.Parse("550e8400-e29b-41d4-a716-446655440022"), ShortName = "uni", LongUrl = "https://university.hyland.com/learn/dashboard" },
         new { Id = Guid.Parse("550e8400-e29b-41d4-a716-446655440023"), ShortName = "engage", LongUrl = "https://engage.cloud.microsoft/main/feed?domainRedirect=true" },
         new { Id = Guid.Parse("550e8400-e29b-41d4-a716-446655440024"), ShortName = "hylight", LongUrl = "https://cloud.workhuman.com/static-apps/wh-host/#/" },
-        new { Id = Guid.Parse("550e8400-e29b-41d4-a716-446655440025"), ShortName = "workday", LongUrl = "https://www.myworkday.com/hyland/d/home.htmld" }      
+        new { Id = Guid.Parse("550e8400-e29b-41d4-a716-446655440025"), ShortName = "workday", LongUrl = "https://www.myworkday.com/hyland/d/home.htmld" },
+        new { Id = Guid.Parse("550e8400-e29b-41d4-a716-446655440026"), ShortName = "hub", LongUrl = "https://hub.hyland.com/" },
+        new { Id = Guid.Parse("550e8400-e29b-41d4-a716-446655440027"), ShortName = "corner", LongUrl = "https://hyland.csod.com/ui/lms-learner-home/home?tab_page_id=-200300006&tab_id=-2" },
+        new { Id = Guid.Parse("550e8400-e29b-41d4-a716-446655440028"), ShortName = "medi", LongUrl = "https://portal.mediassist.in/Home.aspx" },
+        new { Id = Guid.Parse("550e8400-e29b-41d4-a716-446655440029"), ShortName = "benefits", LongUrl = "https://employee.benefitsyou.com/employeeenrollment.aspx"  
     };
     
     // Check which seed entries are missing and add them
