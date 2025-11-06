@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UrlManagementService } from '../url-management/services/url-management.service';
 
@@ -13,11 +13,16 @@ import { UrlManagementService } from '../url-management/services/url-management.
 export class HomeComponent implements OnInit {
   totalUrls: number = 0;
   isLoading: boolean = true;
+  availableShortName: string | null = null;
 
-  constructor(private urlService: UrlManagementService) {}
+  constructor(
+    private urlService: UrlManagementService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     this.loadUrlCount();
+    this.checkForAvailableShortName();
   }
 
   private loadUrlCount(): void {
@@ -31,5 +36,15 @@ export class HomeComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private checkForAvailableShortName(): void {
+    this.route.queryParams.subscribe(params => {
+      this.availableShortName = params['availableShortName'] || null;
+    });
+  }
+
+  dismissBanner(): void {
+    this.availableShortName = null;
   }
 }

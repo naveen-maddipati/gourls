@@ -72,13 +72,34 @@ For detailed documentation, see the [`documentation/`](./documentation/) folder:
 ./scripts/startup.sh --stop-all
 ```
 
-## 🌐 Access URLs
+## 🌐 Access URLs & Go Link Redirection
 
 After running `./scripts/startup.sh --start-all`, you can access:
 
 - **Main App**: http://go.local:2200 (development environment - direct Angular)
 - **Alternative**: http://localhost:2200 (localhost access)
 - **API Direct**: http://localhost:2165
+
+### **Go Link Functionality**
+GoUrls supports seamless go link redirection in both environments:
+
+#### **Creating Go Links**
+1. Access the main application URL
+2. Click "Create a Go Link" or navigate to `/create`
+3. Enter your short name and destination URL
+4. Save to create your go link
+
+#### **Using Go Links**
+- **Existing Links**: `http://go.local:2200/shortname` → Automatically redirects to destination URL
+- **Non-existent Links**: `http://go.local:2200/newname` → Redirects to create page with pre-filled form
+
+#### **Development vs Production**
+| Environment | Access Pattern | Redirection Handling |
+|-------------|----------------|---------------------|
+| **Development** | `http://go.local:2200/shortname` | Angular routing with UrlRedirectComponent |
+| **Production** | `http://go/shortname` | nginx proxy with API redirect |
+
+Both environments provide identical user experience for go link creation and redirection.
 
 ## 🐳 Docker Production Environment
 
@@ -153,6 +174,9 @@ All configuration is fully parameterized with zero hardcoded values.
 ✅ **User management with audit trails**
 ✅ **Cross-platform user detection**
 ✅ **Permission-based access control**
+✅ **Seamless go link redirection**
+✅ **Environment-aware routing (dev/prod parity)**
+✅ **Auto-redirect to create page for new links**
 
 ## 👤 User Management & Security
 

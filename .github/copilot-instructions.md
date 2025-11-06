@@ -162,10 +162,15 @@ GoUrls_Code/
 ### URL Testing & Go Links
 - **Development**: Create short URLs at http://go.local:2200/
 - **Production**: Create short URLs at http://go/
-- **Test redirects**: nginx handles go links directly with 302 redirects
-- **Redirect flow**: http://go/shortname → API lookup → 302 to target URL
+- **Test redirects**: 
+  - Development: Angular UrlRedirectComponent handles routing
+  - Production: nginx handles go links directly with 302 redirects
+- **Redirect flow**: 
+  - Development: `go.local:2200/shortname` → Angular route → API lookup → redirect or create page
+  - Production: `go/shortname` → nginx → API lookup → 302 to target URL
+- **Non-existent links**: Both environments redirect to create page with pre-filled short name
 - Use browser dev tools to debug redirect issues
-- Check nginx logs for proxy-related problems
+- Check nginx logs for proxy-related problems (production only)
 
 ## Troubleshooting
 - If suggestions are not relevant, provide more context or comments.

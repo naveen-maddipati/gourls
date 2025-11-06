@@ -136,6 +136,67 @@ GoUrls uses dedicated port ranges to avoid conflicts between environments and wi
 > - Development uses direct Angular access on port 2200 (nginx config generated but not actively used)
 > - Production nginx uses port 80 for clean URLs, but internal container ports follow the 3000+ range
 
+## 🔗 Go Link Redirection System
+
+GoUrls implements a sophisticated redirection system that provides consistent behavior across development and production environments:
+
+### **Development Environment Redirection**
+- **Direct Angular Routing**: `http://go.local:2200/shortname`
+- **Handler**: `UrlRedirectComponent` with Angular Router
+- **Flow**: Angular route → API lookup → redirect or create page
+
+```typescript
+// Development redirect flow (Angular)
+{ path: ':shortName', component: UrlRedirectComponent }
+// UrlRedirectComponent checks API and either:
+// 1. Redirects to target URL (if found)
+// 2. Navigates to /create with pre-filled shortName (if not found)
+```
+
+### **Production Environment Redirection**
+- **nginx Proxy Routing**: `http://go/shortname`
+- **Handler**: nginx location rules with API backend
+- **Flow**: nginx → API redirect endpoint → 302 response
+
+```nginx
+# Production redirect flow (nginx)
+location ~ ^/([a-zA-Z0-9_-]+)$ {
+    proxy_pass http://localhost:3000/api/urls/redirect/$1;
+    # Returns 302 redirect or 404
+}
+```
+
+### **Unified User Experience**
+Both environments provide identical functionality:
+
+| Action | Development | Production | Result |
+|--------|-------------|------------|---------|
+| **Existing Link** | `go.local:2200/workday` | `go/workday` | → Redirects to target URL |
+| **New Link** | `go.local:2200/mynewlink` | `go/mynewlink` | → Create page with pre-filled form |
+| **Reserved Words** | `go.local:2200/create` | `go/create` | → Application pages (not redirected) |
+
+### **Reserved Word Protection**
+Certain paths are protected from redirection to preserve application functionality:
+
+```bash
+# Reserved words (not treated as short URLs)
+RESERVED_WORDS=search,create,docs,admin,help,about,login,logout,settings,profile,dashboard,api,assets
+```
+
+### **API Endpoint Structure**
+```bash
+# Redirect endpoint (used by both nginx and Angular)
+GET /api/urls/redirect/{shortName}
+# Returns: 302 redirect with Location header OR 404 if not found
+
+# Management endpoints
+GET /api/urls                    # List all URLs
+POST /api/urls                   # Create new URL
+PUT /api/urls/{id}              # Update URL
+DELETE /api/urls/{id}           # Delete URL
+GET /api/urls/user              # Get current user info
+```
+
 ### **Port Range Benefits:**
 ✅ **Conflict Avoidance**: Dedicated ranges prevent port collisions  
 ✅ **Clear Separation**: Easy to identify environment by port number  

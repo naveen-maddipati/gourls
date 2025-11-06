@@ -9,7 +9,8 @@ export const routes: Routes = [
 	{ path: '', component: HomeComponent },
 	{ path: 'search', component: UrlListComponent },
 	{ path: 'create', component: UrlCreateComponent },
-	// Note: Short URL redirects are now handled by nginx, not Angular
-	// If you need a fallback for unknown routes, add it here:
-	// { path: '**', redirectTo: '' }
+	// Catch-all route for potential short URLs - redirect through UrlRedirectComponent
+	{ path: ':shortName', component: UrlRedirectComponent },
+	// Fallback for any remaining unknown routes
+	{ path: '**', redirectTo: '' }
 ];

@@ -32,11 +32,17 @@ export class UrlCreateComponent {
     
     // Check for query parameters when redirected from non-existent shortname
     this.route.queryParams.subscribe(params => {
-      if (params['shortName'] && params['available'] === 'true') {
+      if (params['shortName']) {
         this.shortName = params['shortName'];
-        this.bannerMessage = `'${params['shortName']}' is available! Enter a URL below to create this short link.`;
-        this.bannerType = 'info';
-        setTimeout(() => this.bannerMessage = '', 6000);
+        if (params['available'] === 'true') {
+          this.bannerMessage = `'${params['shortName']}' is available! Enter a URL below to create this short link.`;
+          this.bannerType = 'info';
+        } else {
+          // Direct redirect from non-existent go link
+          this.bannerMessage = `Go link '${params['shortName']}' doesn't exist yet. Create it by entering the destination URL below.`;
+          this.bannerType = 'warning';
+        }
+        setTimeout(() => this.bannerMessage = '', 8000);
       }
     });
   }

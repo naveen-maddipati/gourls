@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UrlManagementService } from '../services/url-management.service';
 import { UrlEntry } from '../models/url-entry.model';
 
@@ -13,7 +13,11 @@ import { CommonModule } from '@angular/common';
 export class UrlRedirectComponent {
   redirectUrl: string | null = null;
 
-  constructor(private urlService: UrlManagementService, private route: ActivatedRoute) {
+  constructor(
+    private urlService: UrlManagementService, 
+    private route: ActivatedRoute,
+    private router: Router
+  ) {
     this.route.params.subscribe(params => {
       const shortName = params['shortName'];
       console.log('UrlRedirectComponent: shortName', shortName);
@@ -31,11 +35,11 @@ export class UrlRedirectComponent {
       },
       error: (error) => {
         console.log('URL not found:', shortName, error);
-        // Show home page and message
-        this.redirectUrl = null;
-        // Use Angular router to navigate to home and pass message
-        window.location.href = '/?availableShortName=' + encodeURIComponent(shortName);
-        console.log('UrlRedirectComponent: unknown shortName, redirecting to home with banner', shortName);
+        // Redirect directly to create page with the shortName pre-filled
+        this.router.navigate(['/create'], { 
+          queryParams: { shortName: shortName } 
+        });
+        console.log('UrlRedirectComponent: unknown shortName, redirecting to create page', shortName);
       }
     });
   }

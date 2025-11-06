@@ -127,6 +127,53 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 
 > **Note**: Both environments run in parallel with isolated databases and different port strategies.
 
+## 🔗 Go Link Usage Examples
+
+### **Creating Go Links**
+Both environments provide identical go link creation workflows:
+
+1. **Access Application**:
+   - Development: `http://go.local:2200/`
+   - Production: `http://go/`
+
+2. **Create New Link**:
+   - Click "Create a Go Link"
+   - Enter short name: `payroll`
+   - Enter destination: `https://mypayroll.company.com/login`
+   - Save
+
+3. **Use Go Link**:
+   - Development: `http://go.local:2200/payroll`
+   - Production: `http://go/payroll`
+   - Both redirect to: `https://mypayroll.company.com/login`
+
+### **Automatic Create Page Redirection**
+When accessing non-existent go links, users are automatically taken to the create page:
+
+```bash
+# User tries non-existent link
+http://go.local:2200/newlink     # Development
+http://go/newlink                # Production
+
+# Automatically redirects to create page with pre-filled form
+http://go.local:2200/create?shortName=newlink    # Development  
+http://go/create?shortName=newlink               # Production
+```
+
+### **Reserved Word Protection**
+Certain paths are protected from go link redirection:
+
+```bash
+# These paths lead to application pages (not redirected)
+http://go.local:2200/search      # Search page
+http://go.local:2200/create      # Create page
+http://go.local:2200/api         # API endpoints
+
+# User-defined go links work normally
+http://go.local:2200/workday     # Redirects to Workday URL
+http://go.local:2200/payroll     # Redirects to payroll system
+```
+
 ## ⚙️ Configuration
 
 ### Environment Files

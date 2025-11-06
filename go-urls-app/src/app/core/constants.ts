@@ -11,5 +11,5 @@ export const Environment = {
   goDomain: 'http://go.local',
   domain: 'go.local',
   isProduction: false,
-  generatedAt: '2025-11-06T19:28:03Z'
+  generatedAt: '2025-11-06T19:58:22Z'
 };

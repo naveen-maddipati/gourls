@@ -1,6 +1,25 @@
 <div class="container py-5">
   <div class="row justify-content-center">
     <div class="col-lg-10">
+      
+      <!-- Available Short Name Banner -->
+      <div class="alert alert-info alert-dismissible fade show mb-4" *ngIf="availableShortName">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-lightbulb-fill me-3 fs-4 text-warning"></i>
+          <div class="flex-grow-1">
+            <h5 class="alert-heading mb-2">Short URL Available!</h5>
+            <p class="mb-2">The short name <strong>"{{ availableShortName }}"</strong> is available. Would you like to create a Go Link with this name?</p>
+            <a [routerLink]="['/create']" [queryParams]="{shortName: availableShortName}" class="btn btn-success btn-sm me-2">
+              <i class="bi bi-plus-circle me-1"></i>Create "{{ availableShortName }}"
+            </a>
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="dismissBanner()">
+              Maybe Later
+            </button>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="dismissBanner()" aria-label="Close"></button>
+      </div>
+
       <!-- Hero Section -->
       <div class="bg-white rounded-4 shadow-lg p-5 mb-5 text-center">
         <h1 class="display-4 fw-bold mb-3" style="color: #003060;">
