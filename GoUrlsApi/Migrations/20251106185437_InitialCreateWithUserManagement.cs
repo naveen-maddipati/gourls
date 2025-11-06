@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GoUrlsApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreateWithUserManagement : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,7 +17,12 @@ namespace GoUrlsApi.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ShortName = table.Column<string>(type: "text", nullable: false),
-                    LongUrl = table.Column<string>(type: "text", nullable: false)
+                    LongUrl = table.Column<string>(type: "text", nullable: false),
+                    CreatedBy = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "text", nullable: true),
+                    IsSystemEntry = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {

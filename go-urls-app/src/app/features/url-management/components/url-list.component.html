@@ -27,16 +27,22 @@
     <div class="text-muted">
       Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} entries
     </div>
-    <div class="text-muted" *ngIf="searchTerm">
-      Filtered by: "{{ searchTerm }}"
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-muted" *ngIf="searchTerm">
+        Filtered by: "{{ searchTerm }}"
+      </div>
+      <div class="text-muted" *ngIf="currentUser">
+        Current user: <strong>{{ currentUser }}</strong>
+      </div>
     </div>
   </div>
   <div class="table-responsive">
     <table class="table table-striped table-bordered">
       <thead>
         <tr>
-          <th style="width: 20%;">Short Name</th>
-          <th style="width: 60%;">Long URL</th>
+          <th style="width: 15%;">Short Name</th>
+          <th style="width: 50%;">Long URL</th>
+          <th style="width: 15%;">Created By</th>
           <th style="width: 20%;">Actions</th>
         </tr>
       </thead>
@@ -67,10 +73,38 @@
             </ng-template>
           </td>
           <td>
-            <button class="btn btn-info btn-sm me-2" (click)="startEdit(entry)">Edit</button>
-            <button class="btn btn-danger btn-sm" (click)="openDeleteModal(entry)">Delete</button>
+            <div class="d-flex align-items-center">
+              <span class="me-2">{{ entry.createdBy || 'Unknown' }}</span>
+              <span class="badge badge-sm" [ngClass]="entry.isSystemEntry ? 'bg-warning text-dark' : 'bg-primary'">
+                {{ entry.isSystemEntry ? 'System' : 'User' }}
+              </span>
+            </div>
+            <div *ngIf="entry.updatedBy" class="small text-muted mt-1" [title]="'Last updated: ' + (entry.updatedAt | date:'short')">
+              Updated by: {{ entry.updatedBy }}
+            </div>
           </td>
-          </tr>
+          <td>
+            <div class="d-flex gap-1">
+              <button 
+                *ngIf="entry.canEdit" 
+                class="btn btn-info btn-sm" 
+                (click)="startEdit(entry)"
+                [title]="'Edit URL'">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <button 
+                *ngIf="entry.canDelete" 
+                class="btn btn-danger btn-sm" 
+                (click)="openDeleteModal(entry)"
+                [title]="'Delete URL'">
+                <i class="bi bi-trash"></i>
+              </button>
+              <span *ngIf="!entry.canEdit && !entry.canDelete" class="text-muted small">
+                No permissions
+              </span>
+            </div>
+          </td>
+        </tr>
   </tbody>
     </table>
   </div>

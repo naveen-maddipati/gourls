@@ -58,23 +58,24 @@ POSTGRES_CONTAINER=gourls-postgres
 ```
 
 ### **`environments/.env.development`**  
-**Purpose:** Development containerized environment with port-based URLs
+**Purpose:** Development environment with direct Angular access
 
 **Key Features:**
-- ✅ **Port-based URLs**: Uses port 2080 for `http://go.local:2080/`
+- ✅ **Direct Angular Access**: Uses port 2200 for `http://go.local:2200/`
 - ✅ **Parallel Operation**: Runs alongside production without conflicts
 - ✅ **Development Database**: Isolated `gourls_dev` database
 - ✅ **Hot Reload**: Supports development workflow
+- ✅ **Simplified Routing**: Direct access to Angular dev server
 
 **Example:**
 ```bash
 # Development Settings  
-PROJECT_NAME=gourls
+PROJECT_NAME=gourls-dev
 GO_DOMAIN=go.local
 
-# Development Ports (With Port Numbers)
-NGINX_PORT=2080               # Development with port
-FRONTEND_PORT=2200            # Angular container  
+# Development Ports (Direct Access)
+NGINX_PORT=2080               # nginx config generated but not actively used
+FRONTEND_PORT=2200            # Angular dev server (main access point)
 API_PORT=2165                 # .NET Core API
 POSTGRES_PORT=2431            # PostgreSQL
 
@@ -103,21 +104,22 @@ docker-compose --env-file environments/.env.production up -d --build
 
 ### **Development Deployment**
 ```bash
-# Start development (port 2080, port-based)
-docker-compose --env-file environments/.env.development up -d --build
+# Start development (direct Angular on port 2200)
+./scripts/startup.sh --start-all
 
-# Access: http://go.local:2080/
+# Access: http://go.local:2200/
+# Alternative: http://localhost:2200/
 # API: http://localhost:2165/api/urls
 ```
 
 ### **Parallel Environments**
 ```bash
 # Run both simultaneously
-docker-compose --env-file environments/.env.production up -d --build
-docker-compose --env-file environments/.env.development up -d --build
+docker-compose --env-file environments/.env.production up -d --build  # Production
+./scripts/startup.sh --start-all                                        # Development
 
 # Production: http://go/
-# Development: http://go.local:2080/
+# Development: http://go.local:2200/
 ```
 
 ## 🔧 Key Configuration Variables
@@ -125,12 +127,14 @@ docker-compose --env-file environments/.env.development up -d --build
 ### **Port Range Strategy**
 GoUrls uses dedicated port ranges to avoid conflicts between environments and with other services:
 
-| Environment | Port Range | nginx | Frontend | API | Database | Domain |
-|-------------|------------|-------|----------|-----|----------|---------|
-| **Development** | **2000-2999** | 2080 | 2200 | 2165 | 2431 | `go.local` |
-| **Production** | **3000-3999** | 80* | 3200 | 3000 | 3432 | `go` |
+| Environment | Port Range | nginx | Frontend | API | Database | Domain | Access |
+|-------------|------------|-------|----------|-----|----------|---------|---------|
+| **Development** | **2000-2999** | 2080* | 2200 | 2165 | 2431 | `go.local` | `go.local:2200` |
+| **Production** | **3000-3999** | 80 | 3200 | 3000 | 3432 | `go` | `go/` |
 
-> **Note**: Production nginx uses port 80 for clean URLs, but internal container ports follow the 3000+ range
+> **Notes**: 
+> - Development uses direct Angular access on port 2200 (nginx config generated but not actively used)
+> - Production nginx uses port 80 for clean URLs, but internal container ports follow the 3000+ range
 
 ### **Port Range Benefits:**
 ✅ **Conflict Avoidance**: Dedicated ranges prevent port collisions  
@@ -500,6 +504,54 @@ The system automatically detects and uses legacy `.env` files. To migrate:
 
 The startup script will automatically use the new structure!
 
+## 👤 User Management Configuration
+
+GoUrls includes a comprehensive user management system with configurable authentication:
+
+### **User Authentication Settings**
+```bash
+# User Authentication (Cross-Platform Development)
+AUTHENTICATION_MODE=Environment          # Use system username
+AUTHENTICATION_DEFAULT_USER=            # Leave empty for auto-detection
+# CURRENT_USER=your.username            # Override for testing
+```
+
+### **How User Detection Works**
+- **Development Environment**: Detects real system username (e.g., "naveen.maddipati")
+- **Production Environment**: Uses "system" user in containerized environments
+- **Cross-Platform**: Works on Windows, macOS, and Linux automatically
+
+### **Permission System**
+- **User Entries**: Users can edit/delete only their own URLs
+  - `createdBy`: Current username
+  - `canEdit`: true
+  - `canDelete`: true
+  - Visual: Blue "User" badge with Edit/Delete buttons
+
+- **System Entries**: Protected seed data, read-only for all users
+  - `createdBy`: "system"
+  - `isSystemEntry`: true
+  - `canEdit`: false
+  - `canDelete`: false
+  - Visual: Yellow "System" badge with "No permissions"
+
+### **Database Schema**
+All URLs include audit trail columns:
+```sql
+CreatedBy VARCHAR(255)     -- Username who created the entry
+CreatedAt TIMESTAMP        -- When it was created
+UpdatedBy VARCHAR(255)     -- Username who last modified it
+UpdatedAt TIMESTAMP        -- When it was last modified
+IsSystemEntry BOOLEAN      -- True for protected seed data
+```
+
+### **Testing Different Users**
+```bash
+# Test as different user (development only)
+echo "CURRENT_USER=test.user" >> .env.local
+./scripts/startup.sh --restart
+```
+
 ## 🎉 Benefits of This System
 
 ✅ **Security** - Passwords never committed to git  
@@ -509,5 +561,8 @@ The startup script will automatically use the new structure!
 ✅ **Production Ready** - Same system scales to production  
 ✅ **Team Consistency** - Eliminates configuration drift  
 ✅ **Documentation** - Self-documenting with examples  
+✅ **User Management** - Built-in permission system with audit trails
+✅ **Cross-Platform** - Automatic user detection on all operating systems
+✅ **Data Protection** - System entries are protected from modification  
 
 This configuration system follows modern DevOps best practices and makes the GoUrls project both secure and easy to work with! 🚀

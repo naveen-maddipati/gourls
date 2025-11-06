@@ -16,4 +16,12 @@
 	background: linear-gradient(90deg, #38c6ff 0%, #4f8cff 100%);
 	transform: translateY(-2px) scale(1.04);
 }
+
+/* User type badge styling */
+.badge-sm {
+	font-size: 0.7rem;
+	padding: 0.25rem 0.5rem;
+	border-radius: 12px;
+}
+
 /* Styles for URL List Component */

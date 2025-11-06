@@ -76,8 +76,8 @@ For detailed documentation, see the [`documentation/`](./documentation/) folder:
 
 After running `./scripts/startup.sh --start-all`, you can access:
 
-- **Main App**: http://go.local:2080 (development environment)
-- **Angular Direct**: http://localhost:2200
+- **Main App**: http://go.local:2200 (development environment - direct Angular)
+- **Alternative**: http://localhost:2200 (localhost access)
 - **API Direct**: http://localhost:2165
 
 ## 🐳 Docker Production Environment
@@ -99,15 +99,15 @@ GoUrls uses a dual-environment system with dedicated port ranges:
 
 ### **Port Range Strategy**
 - **Development Environment**: **2000-2999 range** 
-  - nginx: 2080, Frontend: 2200, API: 2165, Database: 2431
-  - Access: `http://go.local:2080/`
+  - nginx: 2080 (config generated but not actively used), Frontend: 2200, API: 2165, Database: 2431
+  - Access: `http://go.local:2200/` (direct Angular access)
   
 - **Production Environment**: **3000-3999 range**
   - nginx: 80 (clean URLs), Frontend: 3200, API: 3000, Database: 3432  
   - Access: `http://go/`
 
 ### **Configuration Files**
-- **Development**: `environments/.env.development` - Local development with ports (go.local:2080)
+- **Development**: `environments/.env.development` - Local development with ports (go.local:2200)
 - **Production**: `environments/.env.production` - Docker containers with clean URLs (go/)
 
 All configuration is fully parameterized with zero hardcoded values.
@@ -150,6 +150,36 @@ All configuration is fully parameterized with zero hardcoded values.
 ✅ **Comprehensive logging**
 ✅ **Node.js version management**
 ✅ **Docker container management**
+✅ **User management with audit trails**
+✅ **Cross-platform user detection**
+✅ **Permission-based access control**
+
+## 👤 User Management & Security
+
+GoUrls includes a comprehensive user management system:
+
+### **User Detection**
+- **Cross-platform**: Automatically detects current user on Windows, macOS, and Linux
+- **Environment-aware**: Development shows real username, production shows "system"
+- **No authentication required**: Uses system username for simplicity
+
+### **Permission System**
+- **User entries**: Users can only edit/delete URLs they created
+- **System entries**: Pre-seeded data is read-only and protected
+- **Visual indicators**: Clear badges show "User" vs "System" entries
+- **Action controls**: Edit/Delete buttons only appear for user's own entries
+
+### **Audit Trail**
+- **CreatedBy**: Tracks who created each URL
+- **CreatedAt**: Timestamp of creation
+- **UpdatedBy**: Tracks who last modified the URL
+- **UpdatedAt**: Timestamp of last modification
+- **IsSystemEntry**: Flags protected system data
+
+### **User Interface**
+- **Professional design**: User profile dropdown with avatar
+- **Permission feedback**: Clear "No permissions" for system entries
+- **Color coding**: Blue badges for user entries, yellow for system entries
 
 ## 📁 What Gets Created
 

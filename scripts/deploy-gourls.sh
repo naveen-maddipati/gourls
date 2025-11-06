@@ -235,6 +235,16 @@ start_services() {
     log_header "🚀 Starting GoUrls Services"
     load_env
     
+    # Set up user management defaults for production
+    export CURRENT_USER="${CURRENT_USER:-system}"
+    export AUTHENTICATION_DEFAULT_USER="${AUTHENTICATION_DEFAULT_USER:-system}"
+    export AUTHENTICATION_MODE="${AUTHENTICATION_MODE:-Environment}"
+    
+    log_info "User management configuration:"
+    echo "   Current user: ${CURRENT_USER}"
+    echo "   Default user: ${AUTHENTICATION_DEFAULT_USER}" 
+    echo "   Auth mode: ${AUTHENTICATION_MODE}"
+    
     # Setup hosts file for production domain
     setup_hosts $GO_DOMAIN
     

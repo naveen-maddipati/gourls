@@ -134,9 +134,9 @@ GoUrls_Code/
 ### Getting Started
 1. **Development Environment (Local)**:
    ```bash
-   # Start development with port-based URLs
+   # Start development with direct Angular access
    ./scripts/startup.sh --start-all
-   # Access: http://go.local:2080/
+   # Access: http://go.local:2200/
    ```
 
 2. **Production Environment (Docker)**:
@@ -147,7 +147,7 @@ GoUrls_Code/
    ```
 
 ### Dual Environment System
-- **Development**: Uses numbered ports (2080, 2200, 2165, 2431) for local development
+- **Development**: Uses numbered ports (2200 main, 2165 API, 2431 DB) for local development
 - **Production**: Uses standard ports (80, 3200, 3000, 3432) for clean URLs
 - **Parallel Operation**: Both environments can run simultaneously with isolated databases
 - **Zero Hardcoding**: All configuration driven by environment variables in `/environments/`
@@ -160,7 +160,7 @@ GoUrls_Code/
 - Access database via MCP server for queries and debugging
 
 ### URL Testing & Go Links
-- **Development**: Create short URLs at http://go.local:2080/
+- **Development**: Create short URLs at http://go.local:2200/
 - **Production**: Create short URLs at http://go/
 - **Test redirects**: nginx handles go links directly with 302 redirects
 - **Redirect flow**: http://go/shortname → API lookup → 302 to target URL

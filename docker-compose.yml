@@ -37,6 +37,10 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-gourls_secure_password}
       - RESERVED_WORDS=${RESERVED_WORDS}
+      # User management environment variables
+      - CURRENT_USER=${CURRENT_USER:-system}
+      - Authentication__DefaultUser=${AUTHENTICATION_DEFAULT_USER:-system}
+      - Authentication__Mode=${AUTHENTICATION_MODE:-Environment}
     ports:
       - "${API_PORT:-5000}:${API_INTERNAL_PORT:-5000}"
     depends_on:

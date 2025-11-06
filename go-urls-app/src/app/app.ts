@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { NgClass, CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
+import { UserService } from './core/services/user.service';
 
 @Component({
   selector: 'app-root',
@@ -9,12 +10,27 @@ import { HttpClientModule } from '@angular/common/http';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
+export class App implements OnInit {
   protected readonly title = signal('go-urls-app');
+  private userService = inject(UserService);
+  
   bannerMessage = '';
   bannerType: string = 'info';
   searchTerm: string = '';
+  currentUser: string = 'Loading...';
+
   ngOnInit() {
+    // Load current user
+    this.userService.getUserName().subscribe({
+      next: (username) => {
+        this.currentUser = username || 'Unknown User';
+      },
+      error: () => {
+        this.currentUser = 'Unknown User';
+      }
+    });
+
+    // Handle URL parameters for banner messages
     const params = new URLSearchParams(window.location.search);
     const availableShortName = params.get('availableShortName');
     console.log('ngOnInit: availableShortName', availableShortName);

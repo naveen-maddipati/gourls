@@ -5,7 +5,18 @@
   "projects": {
     "go-urls-app": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "css",
+          "standalone": false
+        },
+        "@schematics/angular:directive": {
+          "standalone": false
+        },
+        "@schematics/angular:pipe": {
+          "standalone": false
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
@@ -13,6 +24,8 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "dist/go-urls-app",
+            "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js"
@@ -28,7 +41,8 @@
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/bootstrap-icons/font/bootstrap-icons.css",
               "src/styles.css"
-            ]
+            ],
+            "scripts": []
           },
           "configurations": {
             "production": {
@@ -40,8 +54,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "2kB",
+                  "maximumError": "4kB"
                 }
               ],
               "outputHashing": "all"
@@ -58,15 +72,20 @@
           "builder": "@angular/build:dev-server",
           "options": {
             "buildTarget": "go-urls-app:build:development",
-            "proxyConfig": "proxy.conf.json"
+            "proxyConfig": "proxy.conf.json",
+            "allowedHosts": ["go.local", "localhost"],
+            "port": 2200
           },
           "configurations": {
             "production": {
-              "buildTarget": "go-urls-app:build:production"
+              "buildTarget": "go-urls-app:build:production",
+              "allowedHosts": ["go.local", "localhost"]
             },
             "development": {
               "buildTarget": "go-urls-app:build:development",
-              "proxyConfig": "proxy.conf.json"
+              "proxyConfig": "proxy.conf.json",
+              "allowedHosts": ["go.local", "localhost"],
+              "port": 2200
             }
           },
           "defaultConfiguration": "development"
@@ -90,10 +109,17 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "scripts": []
           }
+        },
+        "eject": {
+          "builder": "@angular/build:eject"
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

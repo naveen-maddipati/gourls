@@ -3,7 +3,6 @@ using System;
 using GoUrlsApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,11 +11,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GoUrlsApi.Migrations
 {
     [DbContext(typeof(GoUrlsDbContext))]
-    [Migration("20250918154727_InitialCreate")]
-    partial class InitialCreate
+    partial class GoUrlsDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,12 +28,28 @@ namespace GoUrlsApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsSystemEntry")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("LongUrl")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ShortName")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
                     b.HasKey("Id");

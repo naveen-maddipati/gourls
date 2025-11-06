@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { UrlManagementService } from '../services/url-management.service';
-import { UrlEntry } from '../models/url-entry.model';
+import { UrlEntry, UpdateUrlRequest } from '../models/url-entry.model';
 import { Observable } from 'rxjs';
 import { Go_Domain } from '../../../core/constants';
 
@@ -15,9 +15,10 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule]
 })
-export class UrlListComponent {
+export class UrlListComponent implements OnInit {
 // ...existing imports and @Component remain at the top of the file...
   Math = Math; // Make Math available in template
+  currentUser: string = '';
   
   goHome() {
     this.router.navigate(['/']);
@@ -136,8 +137,14 @@ export class UrlListComponent {
   }
 
   saveEdit(entry: UrlEntry) {
-  const updated: UrlEntry = { ...entry, shortName: this.editShortName, longUrl: this.editLongUrl };
-    this.urlService.updateUrl(updated).subscribe(result => {
+    if (!entry.id) return;
+    
+    const updateRequest: UpdateUrlRequest = { 
+      shortName: this.editShortName, 
+      longUrl: this.editLongUrl 
+    };
+    
+    this.urlService.updateUrl(entry.id, updateRequest).subscribe(result => {
       this.bannerMessage = 'URL updated successfully!';
       this.bannerType = 'success';
       this.urlService.getUrls().subscribe(entries => {
@@ -164,6 +171,13 @@ export class UrlListComponent {
       this.allEntries = entries;
       this.filteredEntries = entries;
       this.updatePagination();
+    });
+  }
+
+  ngOnInit() {
+    // Get current user on component initialization
+    this.urlService.getCurrentUser().subscribe(user => {
+      this.currentUser = user.name;
     });
   }
 

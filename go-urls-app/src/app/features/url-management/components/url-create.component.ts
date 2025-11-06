@@ -1,7 +1,7 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UrlManagementService } from '../services/url-management.service';
-import { UrlEntry } from '../models/url-entry.model';
+import { UrlEntry, CreateUrlRequest } from '../models/url-entry.model';
 import { Guid } from 'guid-typescript';
 import { Go_Domain } from '../../../core/constants';
 
@@ -57,11 +57,11 @@ export class UrlCreateComponent {
         setTimeout(() => this.bannerMessage = '', 4000);
         return;
       }
-      const entry: UrlEntry = {
+      const request: CreateUrlRequest = {
         shortName: this.shortName,
         longUrl: this.longUrl
       };
-      this.urlService.addUrl(entry).subscribe({
+      this.urlService.addUrl(request).subscribe({
         next: () => {
           this.bannerMessage = 'URL created successfully!';
           this.bannerType = 'success';

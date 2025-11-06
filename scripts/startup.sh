@@ -47,24 +47,30 @@ load_env_config() {
         echo "   Create .env.local from .env.local.example for local settings"
     fi
     
-    # Set default values for any missing variables
-    PROJECT_NAME=${PROJECT_NAME:-gourls}
-    GO_DOMAIN=${GO_DOMAIN:-go}
-    NGINX_PORT=${NGINX_PORT:-80}
-    FRONTEND_PORT=${FRONTEND_PORT:-4200}    # Use FRONTEND_PORT consistently
-    API_PORT=${API_PORT:-5165}
-    POSTGRES_PORT=${POSTGRES_PORT:-5431}
-    POSTGRES_HOST=${POSTGRES_HOST:-127.0.0.1}
-    POSTGRES_DB=${POSTGRES_DB:-gourls_dev}
-    POSTGRES_USER=${POSTGRES_USER:-postgres}
-    POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password123}
-    NGINX_CONFIG_FILE=${NGINX_CONFIG_FILE:-configs/nginx-dev-proxy.conf}
+    # Validate required environment variables are loaded from files
+    # No fallback values - force proper environment configuration
+    if [[ -z "$PROJECT_NAME" ]]; then echo "❌ PROJECT_NAME not set in environment files"; exit 1; fi
+    if [[ -z "$GO_DOMAIN" ]]; then echo "❌ GO_DOMAIN not set in environment files"; exit 1; fi
+    if [[ -z "$NGINX_PORT" ]]; then echo "❌ NGINX_PORT not set in environment files"; exit 1; fi
+    if [[ -z "$FRONTEND_PORT" ]]; then echo "❌ FRONTEND_PORT not set in environment files"; exit 1; fi
+    if [[ -z "$API_PORT" ]]; then echo "❌ API_PORT not set in environment files"; exit 1; fi
+    if [[ -z "$POSTGRES_PORT" ]]; then echo "❌ POSTGRES_PORT not set in environment files"; exit 1; fi
+    if [[ -z "$POSTGRES_HOST" ]]; then echo "❌ POSTGRES_HOST not set in environment files"; exit 1; fi
+    if [[ -z "$POSTGRES_DB" ]]; then echo "❌ POSTGRES_DB not set in environment files"; exit 1; fi
+    if [[ -z "$POSTGRES_USER" ]]; then echo "❌ POSTGRES_USER not set in environment files"; exit 1; fi
+    if [[ -z "$POSTGRES_PASSWORD" ]]; then echo "❌ POSTGRES_PASSWORD not set in environment files"; exit 1; fi
+    
+    # Only set minimal defaults for non-critical values
     POSTGRES_CONTAINER_NAME=${POSTGRES_CONTAINER_NAME:-gourls-postgres-dev}
     POSTGRES_VERSION=${POSTGRES_VERSION:-15}
     API_PROJECT_DIR=${API_PROJECT_DIR:-GoUrlsApi}
     ANGULAR_PROJECT_DIR=${ANGULAR_PROJECT_DIR:-go-urls-app}
     NODE_VERSION_REQUIRED=${NODE_VERSION_REQUIRED:-22.21.1}
     NGINX_CONFIG_FILE=${NGINX_CONFIG_FILE:-nginx-go-proxy.conf}
+    
+    # User management defaults
+    AUTHENTICATION_MODE=${AUTHENTICATION_MODE:-Environment}
+    CURRENT_USER=${CURRENT_USER:-$(whoami)}
     
     # Set computed values
     LOGS_DIR="${LOGS_DIR:-logs}"
@@ -541,6 +547,11 @@ start_api() {
         export ASPNETCORE_ENVIRONMENT="Development"
         export RESERVED_WORDS="$RESERVED_WORDS"
         
+        # User management environment variables
+        export CURRENT_USER="${USER:-$(whoami)}"
+        export Authentication__DefaultUser="${CURRENT_USER}"
+        export Authentication__Mode="${AUTHENTICATION_MODE:-Environment}"
+        
         log_info "Using development database: $POSTGRES_DB on port $POSTGRES_PORT"
         
         nohup dotnet run > "$LOGS_DIR/api.log" 2>&1 &
@@ -665,8 +676,8 @@ start_all() {
     log_header "🎉 DEVELOPMENT ENVIRONMENT READY!"
     echo ""
     echo "📱 Access your application:"
-    echo "   🔗 Main URL: http://$GO_DOMAIN:$NGINX_PORT"
-    echo "   🔗 Direct Angular: http://localhost:$FRONTEND_PORT"
+    echo "   🔗 Main URL: http://$GO_DOMAIN:$FRONTEND_PORT (Development - Direct Angular)"
+    echo "   🔗 Alternative: http://localhost:$FRONTEND_PORT (localhost access)"
     echo "   🔗 API: http://localhost:$API_PORT"
     echo ""
     echo "📊 Service Status:"

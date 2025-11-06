@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GoUrlsApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dae303836b991ac199e5660d37ef28a1f430f7de")]
 [assembly: System.Reflection.AssemblyProductAttribute("GoUrlsApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GoUrlsApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

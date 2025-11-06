@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { UrlEntry } from '../models/url-entry.model';
+import { UrlEntry, CreateUrlRequest, UpdateUrlRequest } from '../models/url-entry.model';
 import { Base_Url } from '../../../core/constants';
 import { Guid } from 'guid-typescript';
 
@@ -22,8 +22,8 @@ export class UrlManagementService {
     );
   }
 
-  addUrl(entry: UrlEntry): Observable<UrlEntry> {
-    return this.http.post<UrlEntry>(this.apiUrl, entry).pipe(
+  addUrl(request: CreateUrlRequest): Observable<UrlEntry> {
+    return this.http.post<UrlEntry>(this.apiUrl, request).pipe(
   catchError((error: any) => {
         console.error('Error adding URL:', error);
         throw error;
@@ -31,8 +31,8 @@ export class UrlManagementService {
     );
   }
 
-  updateUrl(entry: UrlEntry): Observable<UrlEntry> {
-    return this.http.put<UrlEntry>(`${this.apiUrl}/${entry.id}`, entry).pipe(
+  updateUrl(id: Guid, request: UpdateUrlRequest): Observable<UrlEntry> {
+    return this.http.put<UrlEntry>(`${this.apiUrl}/${id}`, request).pipe(
   catchError((error: any) => {
         console.error('Error updating URL:', error);
         throw error;
@@ -62,6 +62,15 @@ export class UrlManagementService {
     return this.http.get<UrlEntry>(`${this.apiUrl}/redirect/${encodeURIComponent(shortName)}`).pipe(
       catchError((error: any) => {
         console.error('Error getting URL by short name:', error);
+        throw error;
+      })
+    );
+  }
+
+  getCurrentUser(): Observable<{name: string, isAuthenticated: boolean}> {
+    return this.http.get<{name: string, isAuthenticated: boolean}>(`${this.apiUrl}/user`).pipe(
+      catchError((error: any) => {
+        console.error('Error getting current user:', error);
         throw error;
       })
     );

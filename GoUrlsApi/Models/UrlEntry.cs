@@ -13,5 +13,17 @@ namespace GoUrlsApi.Models
 
         [Required]
         public string LongUrl { get; set; }
+
+        // User tracking and audit fields
+        [Required]
+        public string CreatedBy { get; set; } = "system";
+        
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        public DateTime? UpdatedAt { get; set; }
+        
+        public string? UpdatedBy { get; set; }
+        
+        public bool IsSystemEntry { get; set; } = false;
     }
 }

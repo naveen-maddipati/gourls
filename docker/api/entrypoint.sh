@@ -3,6 +3,15 @@ set -e
 
 echo "🚀 Starting GoUrls API..."
 
+# Set up user management environment variables for container
+echo "👤 Setting up user management..."
+export CURRENT_USER="${CURRENT_USER:-system}"
+export Authentication__DefaultUser="${CURRENT_USER}"
+export Authentication__Mode="${Authentication__Mode:-Environment}"
+
+echo "   User: ${CURRENT_USER}"
+echo "   Auth Mode: ${Authentication__Mode}"
+
 # Wait for PostgreSQL to be ready
 echo "⏳ Waiting for PostgreSQL to be ready..."
 until PGPASSWORD=${POSTGRES_PASSWORD:-gourls_secure_password} psql -h postgres -p 5432 -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-gourls} -c '\q'; do

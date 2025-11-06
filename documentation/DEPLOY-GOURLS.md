@@ -57,7 +57,7 @@ All services run in isolated containers with proper networking, health checks, a
 │  ┌─────────────┐                                          │
 │  │   User      │                                          │
 │  │   Browser   │  Production: http://go/shortname         │
-│  │             │  Development: http://go.local:2080/      │
+│  │             │  Development: http://go.local:2200/      │
 │  └─────────────┘                                          │
 └─────────────────────────────────────────────────────────────┘
 
@@ -110,8 +110,8 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 
 ### 3. Deploy Development Environment  
 ```bash
-# Start development environment (port 2080, with port numbers)
-docker-compose --env-file environments/.env.development up -d --build
+# Start development environment (direct Angular access on port 2200)
+./scripts/startup.sh --start-all
 ```
 
 ### 4. Access
@@ -121,8 +121,8 @@ docker-compose --env-file environments/.env.development up -d --build
 - **Go Link Redirects**: http://go/shortname → automatic redirect
 
 **Development Environment:**
-- **Main Application**: http://go.local:2080/
-- **Angular Direct**: http://localhost:2200
+- **Main Application**: http://go.local:2200/ (direct Angular)
+- **Alternative**: http://localhost:2200/
 - **API Direct**: http://localhost:2165
 
 > **Note**: Both environments run in parallel with isolated databases and different port strategies.
